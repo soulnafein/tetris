@@ -1,29 +1,13 @@
-module Types exposing (Model, Msg(..), TetrominoType(..))
+module Types exposing (Model, Msg(..))
+
+import Keyboard exposing (Keyboard)
+import Tetromino exposing (Tetromino)
 
 
 type alias Model =
-    { keyPressed : Maybe String
-    , currentTetromino : Tetromino
+    { currentTetromino : Tetromino
     , tetrominos : List Tetromino
     , keyboard : Keyboard
-    }
-
-
-type TetrominoType
-    = I
-    | J
-    | L
-    | O
-    | S
-    | Z
-    | T
-
-
-type alias Tetromino =
-    { x : Float
-    , y : Float
-    , actualX : Float
-    , tetrominoType : TetrominoType
     }
 
 
@@ -32,7 +16,3 @@ type Msg
     | FrameUpdate Float
     | KeyUp String
     | KeyDown String
-
-
-type alias Keyboard =
-    { leftArrowPressed : Bool, rightArrowPressed : Bool }

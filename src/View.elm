@@ -7,7 +7,8 @@ import Maybe
 import Palette exposing (..)
 import Svg exposing (..)
 import Svg.Attributes as A
-import Types exposing (Model, Msg, TetrominoType(..))
+import Tetromino exposing (Tetromino, TetrominoType(..))
+import Types exposing (Model, Msg)
 
 
 render model =
@@ -23,7 +24,7 @@ render model =
             ([ drawBackground ]
                 ++ renderTetrominos (model.tetrominos ++ [ currentTetromino ])
             )
-        , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyPressed)
+        , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyboard.keyPressed)
         ]
 
 
