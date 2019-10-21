@@ -1,12 +1,13 @@
 module View exposing (render)
 
+import Configuration exposing (squareSize)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
 import Maybe
 import Palette exposing (..)
 import Svg exposing (..)
 import Svg.Attributes as A
-import Types exposing (Model, Msg)
+import Types exposing (Model, Msg, TetrominoType(..))
 
 
 render model =
@@ -20,79 +21,108 @@ render model =
             , A.height "600"
             ]
             ([ drawBackground ]
-                ++ tetronimoI (round currentTetromino.x) (round currentTetromino.y)
-                ++ tetronimoJ 100 120
-                ++ tetronimoL 10 300
-                ++ tetronimoO 50 500
-                ++ tetronimoS 90 350
-                ++ tetronimoZ 120 250
-                ++ tetronimoT 160 400
+                ++ renderTetrominos (model.tetrominos ++ [ currentTetromino ])
             )
         , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyPressed)
         ]
 
 
 drawBackground =
-    rect [ A.width "300", A.height "600", A.fill grey ] []
+    rect [ A.width (String.fromInt (squareSize * 10)), A.height (String.fromInt (squareSize * 20)), A.fill grey ] []
 
 
-tetronimoI x y =
+renderTetrominos tetrominos =
+    tetrominos
+        |> List.concatMap renderTetromino
+
+
+renderTetromino tetromino =
+    let
+        renderFunction =
+            case tetromino.tetrominoType of
+                I ->
+                    renderI
+
+                J ->
+                    renderJ
+
+                O ->
+                    renderO
+
+                S ->
+                    renderS
+
+                Z ->
+                    renderZ
+
+                T ->
+                    renderT
+
+                L ->
+                    renderL
+    in
+    renderFunction tetromino.x tetromino.y
+
+
+renderI x y =
     [ 0, 1, 2, 3 ]
-        |> List.map (\i -> square (x + (squareWidth * i)) y cyan)
+        |> List.map (\i -> square (x + (squareSize * i)) y cyan)
 
 
-tetronimoJ x y =
+renderJ x y =
     ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareWidth * i)) (y + squareWidth) blue)
+        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) blue)
     )
         ++ [ square x y blue ]
 
 
-tetronimoL x y =
+renderL x y =
     ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareWidth * i)) (y + squareWidth) orange)
+        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) orange)
     )
-        ++ [ square (x + (squareWidth * 2)) y orange ]
+        ++ [ square (x + (squareSize * 2)) y orange ]
 
 
-tetronimoO x y =
+renderO x y =
     [ square x y yellow
-    , square x (y + squareWidth) yellow
-    , square (x + squareWidth) y yellow
-    , square (x + squareWidth) (y + squareWidth) yellow
+    , square x (y + squareSize) yellow
+    , square (x + squareSize) y yellow
+    , square (x + squareSize) (y + squareSize) yellow
     ]
 
 
-tetronimoS x y =
-    [ square x (y + squareWidth) green
-    , square (x + squareWidth) (y + squareWidth) green
-    , square (x + squareWidth) y green
-    , square (x + squareWidth) (y + (2 * squareWidth)) green
+renderS x y =
+    [ square x (y + squareSize) green
+    , square (x + squareSize) (y + squareSize) green
+    , square (x + squareSize) y green
+    , square (x + squareSize) (y + (2 * squareSize)) green
     ]
 
 
-tetronimoZ x y =
+renderZ x y =
     [ square x y red
-    , square (x + squareWidth) y red
-    , square (x + squareWidth) (y + squareWidth) red
-    , square (x + (2 * squareWidth)) (y + squareWidth) red
+    , square (x + squareSize) y red
+    , square (x + squareSize) (y + squareSize) red
+    , square (x + (2 * squareSize)) (y + squareSize) red
     ]
 
 
-tetronimoT x y =
+renderT x y =
     ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareWidth * i)) (y + squareWidth) purple)
+        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) purple)
     )
-        ++ [ square (x + squareWidth) y purple ]
-
-
-squareWidth =
-    30
+        ++ [ square (x + squareSize) y purple ]
 
 
 square x y color =
     let
         size =
-            String.fromInt squareWidth
+            String.fromInt squareSize
+
+        roundedX =
+            String.fromInt (round x)
+
+        roundedY =
+            String.fromInt (round y)
     in
-    rect [ A.width size, A.height size, A.fill color, A.x (String.fromInt x), A.y (String.fromInt y) ] []
+    rect [ A.width size, A.height size, A.fill color, A.x roundedX, A.y roundedY ] []

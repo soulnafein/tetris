@@ -1,17 +1,29 @@
-module Types exposing (Model, Msg(..))
+module Types exposing (Model, Msg(..), TetrominoType(..))
 
 
 type alias Model =
     { keyPressed : Maybe String
     , currentTetromino : Tetromino
+    , tetrominos : List Tetromino
     , keyboard : Keyboard
     }
+
+
+type TetrominoType
+    = I
+    | J
+    | L
+    | O
+    | S
+    | Z
+    | T
 
 
 type alias Tetromino =
     { x : Float
     , y : Float
     , actualX : Float
+    , tetrominoType : TetrominoType
     }
 
 

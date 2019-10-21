@@ -9,7 +9,7 @@ import Configuration
         , squareSize
         )
 import Json.Decode as Decode
-import Types exposing (Model, Msg(..))
+import Types exposing (Model, Msg(..), TetrominoType(..))
 import View
 
 
@@ -36,11 +36,22 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( { keyPressed = Nothing
-      , currentTetromino = { x = 0, y = 0, actualX = 0 }
+      , currentTetromino = { x = 0, y = 0, actualX = 0, tetrominoType = I }
+      , tetrominos = createTetrominos
       , keyboard = { leftArrowPressed = False, rightArrowPressed = False }
       }
     , Cmd.none
     )
+
+
+createTetrominos =
+    [ { x = 100, actualX = 100, y = 120, tetrominoType = J }
+    , { x = 10, actualX = 10, y = 30, tetrominoType = L }
+    , { x = 50, actualX = 50, y = 500, tetrominoType = O }
+    , { x = 90, actualX = 90, y = 350, tetrominoType = S }
+    , { x = 120, actualX = 120, y = 250, tetrominoType = Z }
+    , { x = 160, actualX = 160, y = 400, tetrominoType = T }
+    ]
 
 
 
