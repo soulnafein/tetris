@@ -2,29 +2,38 @@ module View exposing (render)
 
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
+import Maybe
+import Palette exposing (..)
 import Svg exposing (..)
 import Svg.Attributes as A
 import Types exposing (Model, Msg)
 
 
-render _ =
-    svg
-        [ A.width "300"
-        , A.height "600"
+render model =
+    let
+        currentTetromino =
+            model.currentTetromino
+    in
+    div []
+        [ svg
+            [ A.width "300"
+            , A.height "600"
+            ]
+            ([ drawBackground ]
+                ++ tetronimoI (round currentTetromino.x) (round currentTetromino.y)
+                ++ tetronimoJ 100 120
+                ++ tetronimoL 10 300
+                ++ tetronimoO 50 500
+                ++ tetronimoS 90 350
+                ++ tetronimoZ 120 250
+                ++ tetronimoT 160 400
+            )
+        , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyPressed)
         ]
-        ([ drawBackground ]
-            ++ tetronimoI 20 40
-            ++ tetronimoJ 100 120
-            ++ tetronimoL 10 300
-            ++ tetronimoO 50 500
-            ++ tetronimoS 90 350
-            ++ tetronimoZ 120 250
-            ++ tetronimoT 160 400
-        )
 
 
 drawBackground =
-    rect [ A.width "300", A.height "600", A.fill "rgb(236, 240, 241)" ] []
+    rect [ A.width "300", A.height "600", A.fill grey ] []
 
 
 tetronimoI x y =
@@ -75,34 +84,6 @@ tetronimoT x y =
         |> List.map (\i -> square (x + (squareWidth * i)) (y + squareWidth) purple)
     )
         ++ [ square (x + squareWidth) y purple ]
-
-
-cyan =
-    "rgb(52, 235, 222)"
-
-
-blue =
-    "rgb(58, 52, 235)"
-
-
-orange =
-    "rgb(235, 119, 52)"
-
-
-yellow =
-    "rgb(255, 255, 28)"
-
-
-green =
-    "rgb(28, 255, 32)"
-
-
-red =
-    "rgb(255, 62, 28)"
-
-
-purple =
-    "rgb(201, 125, 255)"
 
 
 squareWidth =
