@@ -1,5 +1,7 @@
 module Configuration exposing
-    ( fallingSpeed
+    ( backgroundHeight
+    , backgroundWidth
+    , fallingSpeed
     , movingSpeed
     , squareSize
     )
@@ -14,4 +16,12 @@ fallingSpeed =
 
 
 movingSpeed =
+    squareSize * 10
+
+
+backgroundHeight =
+    squareSize * 20
+
+
+backgroundWidth =
     squareSize * 10

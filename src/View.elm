@@ -1,6 +1,6 @@
 module View exposing (render)
 
-import Configuration exposing (squareSize)
+import Configuration exposing (backgroundHeight, backgroundWidth, squareSize)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
 import Maybe
@@ -18,8 +18,8 @@ render model =
     in
     div []
         [ svg
-            [ A.width "300"
-            , A.height "600"
+            [ A.width (String.fromInt backgroundWidth)
+            , A.height (String.fromInt backgroundHeight)
             ]
             ([ drawBackground ]
                 ++ renderTetrominos (model.tetrominos ++ [ currentTetromino ])
@@ -29,7 +29,7 @@ render model =
 
 
 drawBackground =
-    rect [ A.width (String.fromInt (squareSize * 10)), A.height (String.fromInt (squareSize * 20)), A.fill grey ] []
+    rect [ A.width (String.fromInt backgroundWidth), A.height (String.fromInt backgroundHeight), A.fill grey ] []
 
 
 renderTetrominos tetrominos =

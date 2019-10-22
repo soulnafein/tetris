@@ -1,11 +1,21 @@
-module Tetromino exposing (Tetromino, TetrominoType(..), create, createList, update)
+module Tetromino exposing
+    ( Tetromino
+    , TetrominoType(..)
+    , create
+    , createList
+    , generateRandomType
+    , reachedBottom
+    , update
+    )
 
 import Configuration
     exposing
-        ( fallingSpeed
+        ( backgroundHeight
+        , fallingSpeed
         , movingSpeed
         , squareSize
         )
+import Random
 
 
 type TetrominoType
@@ -61,3 +71,19 @@ update delta keyboard tetromino =
             toFloat (floor (updatedActualX / squareSize) * squareSize)
     in
     { tetromino | y = updatedY, x = updatedX, actualX = updatedActualX }
+
+
+reachedBottom tetromino =
+    tetromino.y > backgroundHeight
+
+
+generateRandomType msg =
+    Random.generate msg randomTetrominoGenerator
+
+
+randomTetrominoGenerator =
+    Random.uniform I [ J, L, O, S, Z, T ]
+
+
+
+-- Random.List.choose [ I, J, L, O, S, Z, T ]

@@ -1,7 +1,7 @@
 module Types exposing (Model, Msg(..))
 
 import Keyboard exposing (Keyboard)
-import Tetromino exposing (Tetromino)
+import Tetromino exposing (Tetromino, TetrominoType)
 
 
 type alias Model =
@@ -16,3 +16,4 @@ type Msg
     | FrameUpdate Float
     | KeyUp String
     | KeyDown String
+    | TetrominoGenerated TetrominoType

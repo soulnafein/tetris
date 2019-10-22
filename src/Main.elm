@@ -2,12 +2,6 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp)
-import Configuration
-    exposing
-        ( fallingSpeed
-        , movingSpeed
-        , squareSize
-        )
 import Json.Decode as Decode
 import Keyboard exposing (Keyboard)
 import Tetromino exposing (Tetromino, TetrominoType(..))
@@ -19,20 +13,49 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         KeyDown code ->
-            ( { model | keyboard = Keyboard.update code model.keyboard Keyboard.Pressed }, Cmd.none )
+            onKeyChange model code Keyboard.Pressed
 
         KeyUp code ->
-            ( { model | keyboard = Keyboard.update code model.keyboard Keyboard.Released }, Cmd.none )
+            onKeyChange model code Keyboard.Released
 
         FrameUpdate delta ->
-            let
-                deltaInSeconds =
-                    delta / 1000
-            in
-            ( { model | currentTetromino = Tetromino.update deltaInSeconds model.keyboard model.currentTetromino }, Cmd.none )
+            onFrameUpdate model delta
+
+        TetrominoGenerated tetrominoType ->
+            onTetrominoGenerated model tetrominoType
 
         _ ->
             ( model, Cmd.none )
+
+
+onFrameUpdate model delta =
+    let
+        deltaInSeconds =
+            delta / 1000
+
+        currentTetromino =
+            Tetromino.update deltaInSeconds model.keyboard model.currentTetromino
+
+        commands =
+            if Tetromino.reachedBottom currentTetromino then
+                [ Tetromino.generateRandomType TetrominoGenerated ]
+
+            else
+                []
+    in
+    ( { model | currentTetromino = currentTetromino }, Cmd.batch commands )
+
+
+onKeyChange model code action =
+    ( { model | keyboard = Keyboard.update code model.keyboard action }, Cmd.none )
+
+
+onTetrominoGenerated model tetrominoType =
+    let
+        newTetromino =
+            Tetromino.create { x = 0, y = 0, tetrominoType = tetrominoType }
+    in
+    ( { model | currentTetromino = newTetromino }, Cmd.none )
 
 
 init : ( Model, Cmd Msg )
