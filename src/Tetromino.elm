@@ -4,7 +4,7 @@ module Tetromino exposing
     , create
     , createList
     , generateRandomType
-    , reachedBottom
+    , stoppedMoving
     , update
     )
 
@@ -31,9 +31,12 @@ type TetrominoType
 type alias Tetromino =
     { x : Float
     , y : Float
+    , previousActualX : Float
+    , previousY : Float
     , actualX : Float
     , tetrominoType : TetrominoType
     , blocks : List Block
+    , verticalSpeed : Int
     }
 
 
@@ -47,8 +50,11 @@ create params =
     { x = params.x
     , y = params.y
     , actualX = params.x
+    , previousActualX = params.x
+    , previousY = params.y
     , tetrominoType = params.tetrominoType
     , blocks = createBlocks params
+    , verticalSpeed = fallingSpeed
     }
 
 
@@ -63,12 +69,18 @@ update delta keyboard tetromino =
             calculateHorizontalSpeed keyboard
     in
     tetromino
-        |> updateY delta
+        |> updatePreviousPosition
+        |> fall delta
         |> updateX delta horizontalSpeed
+        |> resolveBottomCollision
         |> updateBlocks
 
 
-updateY delta tetromino =
+updatePreviousPosition tetromino =
+    { tetromino | previousY = tetromino.y, previousActualX = tetromino.actualX }
+
+
+fall delta tetromino =
     { tetromino | y = tetromino.y + (fallingSpeed * delta) }
 
 
@@ -98,8 +110,49 @@ calculateHorizontalSpeed keyboard =
         0
 
 
+resolveBottomCollision tetromino =
+    let
+        verticalCollisionDistance =
+            lowestBlockY tetromino - backgroundHeight
+    in
+    if verticalCollisionDistance > 0 then
+        tetromino
+            |> updateY (tetromino.y - verticalCollisionDistance)
+            |> updateVerticalSpeed 0
+
+    else
+        tetromino
+
+
+updateY newY tetromino =
+    { tetromino | previousY = tetromino.y, y = newY }
+
+
+updateVerticalSpeed speed tetromino =
+    { tetromino | verticalSpeed = speed }
+
+
+stoppedMoving tetromino =
+    tetromino.verticalSpeed == 0
+
+
 reachedBottom tetromino =
     tetromino.y > backgroundHeight
+
+
+lowestBlockY : Tetromino -> Float
+lowestBlockY tetromino =
+    tetromino.blocks
+        |> List.map .y
+        |> List.map (\y -> y + squareSize)
+        |> List.sort
+        |> List.reverse
+        |> List.head
+        |> Maybe.withDefault 0
+
+
+
+-- any blocks reached bottom
 
 
 generateRandomType msg =

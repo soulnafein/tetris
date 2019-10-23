@@ -37,13 +37,20 @@ onFrameUpdate model delta =
             Tetromino.update deltaInSeconds model.keyboard model.currentTetromino
 
         commands =
-            if Tetromino.reachedBottom currentTetromino then
+            if Tetromino.stoppedMoving currentTetromino then
                 [ Tetromino.generateRandomType TetrominoGenerated ]
 
             else
                 []
+
+        tetrominos =
+            if Tetromino.stoppedMoving currentTetromino then
+                model.tetrominos ++ [ currentTetromino ]
+
+            else
+                model.tetrominos
     in
-    ( { model | currentTetromino = currentTetromino }, Cmd.batch commands )
+    ( { model | currentTetromino = currentTetromino, tetrominos = tetrominos }, Cmd.batch commands )
 
 
 onKeyChange model code action =
