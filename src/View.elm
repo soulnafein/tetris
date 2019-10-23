@@ -39,91 +39,46 @@ renderTetrominos tetrominos =
 
 renderTetromino tetromino =
     let
-        renderFunction =
+        color =
             case tetromino.tetrominoType of
                 I ->
-                    renderI
+                    cyan
 
                 J ->
-                    renderJ
+                    blue
 
                 O ->
-                    renderO
+                    yellow
 
                 S ->
-                    renderS
+                    green
 
                 Z ->
-                    renderZ
+                    red
 
                 T ->
-                    renderT
+                    purple
 
                 L ->
-                    renderL
+                    orange
     in
-    renderFunction tetromino.x tetromino.y
+    renderBlocks color tetromino.blocks
 
 
-renderI x y =
-    [ 0, 1, 2, 3 ]
-        |> List.map (\i -> square (x + (squareSize * i)) y cyan)
+renderBlocks color blocks =
+    blocks
+        |> List.map (renderBlock color)
 
 
-renderJ x y =
-    ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) blue)
-    )
-        ++ [ square x y blue ]
-
-
-renderL x y =
-    ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) orange)
-    )
-        ++ [ square (x + (squareSize * 2)) y orange ]
-
-
-renderO x y =
-    [ square x y yellow
-    , square x (y + squareSize) yellow
-    , square (x + squareSize) y yellow
-    , square (x + squareSize) (y + squareSize) yellow
-    ]
-
-
-renderS x y =
-    [ square x (y + squareSize) green
-    , square (x + squareSize) (y + squareSize) green
-    , square (x + squareSize) y green
-    , square (x + squareSize) (y + (2 * squareSize)) green
-    ]
-
-
-renderZ x y =
-    [ square x y red
-    , square (x + squareSize) y red
-    , square (x + squareSize) (y + squareSize) red
-    , square (x + (2 * squareSize)) (y + squareSize) red
-    ]
-
-
-renderT x y =
-    ([ 0, 1, 2 ]
-        |> List.map (\i -> square (x + (squareSize * i)) (y + squareSize) purple)
-    )
-        ++ [ square (x + squareSize) y purple ]
-
-
-square x y color =
+renderBlock color block =
     let
         size =
             String.fromInt squareSize
 
         roundedX =
-            String.fromInt (round x)
+            String.fromInt (round block.x)
 
         roundedY =
-            String.fromInt (round y)
+            String.fromInt (round block.y)
     in
     rect [ A.width size, A.height size, A.fill color, A.x roundedX, A.y roundedY ] []
