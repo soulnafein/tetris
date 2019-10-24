@@ -4,6 +4,7 @@ module Keyboard exposing (Keyboard, KeyboardAction(..), update)
 type alias Keyboard =
     { leftArrowPressed : Bool
     , rightArrowPressed : Bool
+    , upArrowPressed : Bool
     , keyPressed : Maybe String
     }
 
@@ -47,6 +48,9 @@ updateArrowState code isPressed keyboard =
 
         "ArrowRight" ->
             { keyboard | rightArrowPressed = isPressed }
+
+        "ArrowUp" ->
+            { keyboard | upArrowPressed = isPressed }
 
         _ ->
             keyboard

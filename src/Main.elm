@@ -68,22 +68,11 @@ onTetrominoGenerated model tetrominoType =
 init : ( Model, Cmd Msg )
 init =
     ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = I }
-      , tetrominos = createTetrominos
-      , keyboard = { keyPressed = Nothing, leftArrowPressed = False, rightArrowPressed = False }
+      , tetrominos = []
+      , keyboard = { keyPressed = Nothing, leftArrowPressed = False, rightArrowPressed = False, upArrowPressed = False }
       }
     , Cmd.none
     )
-
-
-createTetrominos =
-    Tetromino.createList
-        [ { x = 100, y = 120, tetrominoType = J }
-        , { x = 10, y = 30, tetrominoType = L }
-        , { x = 50, y = 500, tetrominoType = O }
-        , { x = 90, y = 350, tetrominoType = S }
-        , { x = 120, y = 250, tetrominoType = Z }
-        , { x = 160, y = 400, tetrominoType = T }
-        ]
 
 
 

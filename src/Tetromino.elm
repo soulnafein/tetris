@@ -37,6 +37,8 @@ type alias Tetromino =
     , tetrominoType : TetrominoType
     , blocks : List Block
     , verticalSpeed : Int
+    , rotation : Rotation
+    , hasJustRotated : Bool
     }
 
 
@@ -46,6 +48,13 @@ type alias Block =
     }
 
 
+type Rotation
+    = North
+    | East
+    | South
+    | West
+
+
 create params =
     { x = params.x
     , y = params.y
@@ -53,9 +62,12 @@ create params =
     , previousActualX = params.x
     , previousY = params.y
     , tetrominoType = params.tetrominoType
-    , blocks = createBlocks params
     , verticalSpeed = fallingSpeed
+    , rotation = East
+    , hasJustRotated = False
+    , blocks = []
     }
+        |> updateBlocks
 
 
 createList listParams =
@@ -74,6 +86,37 @@ update delta keyboard tetromino =
         |> updateX delta horizontalSpeed
         |> resolveBottomCollision
         |> updateBlocks
+        |> updateRotation keyboard
+
+
+updateRotation keyboard tetromino =
+    let
+        rotation =
+            if keyboard.upArrowPressed && not tetromino.hasJustRotated then
+                nextRotation tetromino.rotation
+
+            else
+                tetromino.rotation
+
+        hasJustRotated =
+            keyboard.upArrowPressed
+    in
+    { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
+
+
+nextRotation rotation =
+    case rotation of
+        North ->
+            East
+
+        East ->
+            South
+
+        South ->
+            West
+
+        West ->
+            North
 
 
 updatePreviousPosition tetromino =
@@ -93,10 +136,6 @@ updateX delta horizontalSpeed tetromino =
             toFloat (floor (updatedActualX / squareSize) * squareSize)
     in
     { tetromino | x = updatedX, actualX = updatedActualX }
-
-
-updateBlocks tetromino =
-    { tetromino | blocks = createBlocks tetromino }
 
 
 calculateHorizontalSpeed keyboard =
@@ -163,10 +202,10 @@ randomTetrominoGenerator =
     Random.uniform I [ J, L, O, S, Z, T ]
 
 
-createBlocks params =
+updateBlocks tetromino =
     let
-        blocks =
-            case params.tetrominoType of
+        blocksFunction =
+            case tetromino.tetrominoType of
                 I ->
                     blocksI
 
@@ -187,65 +226,161 @@ createBlocks params =
 
                 T ->
                     blocksT
+
+        blocks =
+            blocksFunction tetromino.rotation
+                |> stringsToBlocks
+                |> List.map (convertCoordinates tetromino.x tetromino.y)
     in
-    blocks
-        |> List.map (convertCoordinates params.x params.y)
+    { tetromino | blocks = blocks }
 
 
-blocksI =
-    [ { x = 0, y = 0 }
-    , { x = 1, y = 0 }
-    , { x = 2, y = 0 }
-    , { x = 3, y = 0 }
-    ]
+blocksI rotation =
+    case rotation of
+        North ->
+            [ "OOOO"
+            , "####"
+            ]
+
+        East ->
+            [ "OO#O"
+            , "OO#O"
+            , "OO#O"
+            , "OO#O"
+            ]
+
+        South ->
+            [ "OOOO"
+            , "OOOO"
+            , "####"
+            ]
+
+        West ->
+            [ "O#OO"
+            , "O#OO"
+            , "O#OO"
+            , "O#OO"
+            ]
 
 
-blocksJ =
-    [ { x = 0, y = 0 }
-    , { x = 0, y = 1 }
-    , { x = 1, y = 1 }
-    , { x = 2, y = 1 }
-    ]
+blocksJ rotation =
+    case rotation of
+        North ->
+            [ "#OOO"
+            , "###O"
+            ]
+
+        East ->
+            [ "O##O"
+            , "O#OO"
+            , "O#OO"
+            ]
+
+        South ->
+            [ "OOOO"
+            , "###O"
+            , "OO#O"
+            ]
+
+        West ->
+            [ "O#OO"
+            , "O#OO"
+            , "##OO"
+            ]
 
 
-blocksL =
-    [ { x = 2, y = 0 }
-    , { x = 0, y = 1 }
-    , { x = 1, y = 1 }
-    , { x = 2, y = 1 }
-    ]
+blocksL rotation =
+    case rotation of
+        North ->
+            [ "OO#O"
+            , "###O"
+            ]
+
+        East ->
+            [ "O#OO"
+            , "O#OO"
+            , "O##O"
+            ]
+
+        South ->
+            [ "OOOO"
+            , "###O"
+            , "#OOO"
+            ]
+
+        West ->
+            [ "##OO"
+            , "O#OO"
+            , "O#OO"
+            ]
 
 
-blocksO =
-    [ { x = 0, y = 0 }
-    , { x = 1, y = 0 }
-    , { x = 0, y = 1 }
-    , { x = 1, y = 1 }
-    ]
+blocksO rotation =
+    case rotation of
+        _ ->
+            [ "0##0"
+            , "0##0"
+            ]
 
 
-blocksS =
-    [ { x = 2, y = 0 }
-    , { x = 1, y = 0 }
-    , { x = 1, y = 1 }
-    , { x = 0, y = 1 }
-    ]
+blocksS rotation =
+    case rotation of
+        North ->
+            [ "O##O"
+            , "##OO"
+            ]
+
+        East ->
+            [ "O#OO"
+            , "O##O"
+            , "OO#O"
+            ]
+
+        South ->
+            [ "OOOO"
+            , "O##O"
+            , "##OO"
+            ]
+
+        West ->
+            [ "#OOO"
+            , "##OO"
+            , "O#OO"
+            ]
 
 
-blocksZ =
-    [ { x = 0, y = 0 }
-    , { x = 1, y = 0 }
-    , { x = 1, y = 1 }
-    , { x = 2, y = 1 }
-    ]
+blocksZ rotation =
+    case rotation of
+        North ->
+            [ "##OO"
+            , "O##O"
+            ]
+
+        East ->
+            [ "OO#O"
+            , "O##O"
+            , "O#OO"
+            ]
+
+        South ->
+            [ "OOOO"
+            , "##OO"
+            , "O##O"
+            ]
+
+        West ->
+            [ "O#OO"
+            , "##OO"
+            , "#OOO"
+            ]
 
 
-blocksT =
-    [ { x = 0, y = 1 }
-    , { x = 1, y = 1 }
-    , { x = 2, y = 1 }
-    , { x = 1, y = 0 }
-    ]
+blocksT rotation =
+    case rotation of
+        _ ->
+            [ "O#OO"
+            , "###O"
+            ]
 
 
 convertCoordinates x y block =
@@ -253,3 +388,14 @@ convertCoordinates x y block =
         | x = block.x * squareSize + x
         , y = block.y * squareSize + y
     }
+
+
+stringsToBlocks rows =
+    List.indexedMap stringToBlocks rows
+        |> List.concat
+
+
+stringToBlocks y string =
+    string
+        |> String.indexes "#"
+        |> List.map (\x -> { x = toFloat x, y = toFloat y })
