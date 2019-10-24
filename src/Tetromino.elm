@@ -31,9 +31,10 @@ type TetrominoType
 type alias Tetromino =
     { x : Float
     , y : Float
-    , previousActualX : Float
-    , previousY : Float
     , actualX : Float
+    , actualY : Float
+    , previousActualX : Float
+    , previousActualY : Float
     , tetrominoType : TetrominoType
     , blocks : List Block
     , verticalSpeed : Int
@@ -59,8 +60,9 @@ create params =
     { x = params.x
     , y = params.y
     , actualX = params.x
+    , actualY = params.y
     , previousActualX = params.x
-    , previousY = params.y
+    , previousActualY = params.y
     , tetrominoType = params.tetrominoType
     , verticalSpeed = fallingSpeed
     , rotation = East
@@ -120,11 +122,20 @@ nextRotation rotation =
 
 
 updatePreviousPosition tetromino =
-    { tetromino | previousY = tetromino.y, previousActualX = tetromino.actualX }
+    { tetromino | previousActualY = tetromino.actualY, previousActualX = tetromino.actualX }
 
 
 fall delta tetromino =
-    { tetromino | y = tetromino.y + (fallingSpeed * delta) }
+    tetromino
+        |> updateY (tetromino.actualY + (fallingSpeed * delta))
+
+
+stickToGrid aNumber =
+    toFloat (floor (aNumber / squareSize) * squareSize)
+
+
+updateY actualY tetromino =
+    { tetromino | actualY = actualY, y = stickToGrid actualY, previousActualY = tetromino.actualY }
 
 
 updateX delta horizontalSpeed tetromino =
@@ -156,15 +167,11 @@ resolveBottomCollision tetromino =
     in
     if verticalCollisionDistance > 0 then
         tetromino
-            |> updateY (tetromino.y - verticalCollisionDistance)
+            |> updateY (tetromino.actualY - verticalCollisionDistance)
             |> updateVerticalSpeed 0
 
     else
         tetromino
-
-
-updateY newY tetromino =
-    { tetromino | previousY = tetromino.y, y = newY }
 
 
 updateVerticalSpeed speed tetromino =
