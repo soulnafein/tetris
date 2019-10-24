@@ -11,6 +11,7 @@ module Tetromino exposing
 import Configuration
     exposing
         ( backgroundHeight
+        , backgroundWidth
         , fallingSpeed
         , movingSpeed
         , squareSize
@@ -33,8 +34,6 @@ type alias Tetromino =
     , y : Float
     , actualX : Float
     , actualY : Float
-    , previousActualX : Float
-    , previousActualY : Float
     , tetrominoType : TetrominoType
     , blocks : List Block
     , verticalSpeed : Int
@@ -61,8 +60,6 @@ create params =
     , y = params.y
     , actualX = params.x
     , actualY = params.y
-    , previousActualX = params.x
-    , previousActualY = params.y
     , tetrominoType = params.tetrominoType
     , verticalSpeed = fallingSpeed
     , rotation = East
@@ -83,10 +80,10 @@ update delta keyboard tetromino =
             calculateHorizontalSpeed keyboard
     in
     tetromino
-        |> updatePreviousPosition
         |> fall delta
-        |> updateX delta horizontalSpeed
-        |> resolveBottomCollision
+        |> horizontalMovement delta horizontalSpeed
+        |> updateBlocks
+        |> resolveCollisions
         |> updateBlocks
         |> updateRotation keyboard
 
@@ -121,10 +118,6 @@ nextRotation rotation =
             North
 
 
-updatePreviousPosition tetromino =
-    { tetromino | previousActualY = tetromino.actualY, previousActualX = tetromino.actualX }
-
-
 fall delta tetromino =
     tetromino
         |> updateY (tetromino.actualY + (fallingSpeed * delta))
@@ -135,18 +128,19 @@ stickToGrid aNumber =
 
 
 updateY actualY tetromino =
-    { tetromino | actualY = actualY, y = stickToGrid actualY, previousActualY = tetromino.actualY }
+    { tetromino | actualY = actualY, y = stickToGrid actualY }
 
 
-updateX delta horizontalSpeed tetromino =
+horizontalMovement delta horizontalSpeed tetromino =
     let
         updatedActualX =
             tetromino.actualX + (horizontalSpeed * delta)
-
-        updatedX =
-            toFloat (floor (updatedActualX / squareSize) * squareSize)
     in
-    { tetromino | x = updatedX, actualX = updatedActualX }
+    updateX updatedActualX tetromino
+
+
+updateX actualX tetromino =
+    { tetromino | actualX = actualX, x = stickToGrid actualX }
 
 
 calculateHorizontalSpeed keyboard =
@@ -174,6 +168,47 @@ resolveBottomCollision tetromino =
         tetromino
 
 
+resolveCollisions tetromino =
+    tetromino
+        |> resolveBottomCollision
+        |> resolveLeftCollision
+        |> resolveRightCollision
+
+
+resolveLeftCollision tetromino =
+    let
+        leftCollisionDistance =
+            leftmostBlockX tetromino
+    in
+    if leftCollisionDistance < 0 then
+        let
+            updatedTetromino =
+                tetromino
+                    |> updateX (tetromino.actualX - leftCollisionDistance)
+        in
+        updatedTetromino
+
+    else
+        tetromino
+
+
+resolveRightCollision tetromino =
+    let
+        rightCollisionDistance =
+            rightmostBlockX tetromino - backgroundWidth
+    in
+    if rightCollisionDistance > 0 then
+        let
+            updatedTetromino =
+                tetromino
+                    |> updateX (tetromino.actualX - rightCollisionDistance)
+        in
+        updatedTetromino
+
+    else
+        tetromino
+
+
 updateVerticalSpeed speed tetromino =
     { tetromino | verticalSpeed = speed }
 
@@ -191,6 +226,26 @@ lowestBlockY tetromino =
     tetromino.blocks
         |> List.map .y
         |> List.map (\y -> y + squareSize)
+        |> List.sort
+        |> List.reverse
+        |> List.head
+        |> Maybe.withDefault 0
+
+
+leftmostBlockX : Tetromino -> Float
+leftmostBlockX tetromino =
+    tetromino.blocks
+        |> List.map .x
+        |> List.sort
+        |> List.head
+        |> Maybe.withDefault 0
+
+
+rightmostBlockX : Tetromino -> Float
+rightmostBlockX tetromino =
+    tetromino.blocks
+        |> List.map .x
+        |> List.map (\x -> x + squareSize)
         |> List.sort
         |> List.reverse
         |> List.head

@@ -33,24 +33,40 @@ onFrameUpdate model delta =
         deltaInSeconds =
             delta / 1000
 
-        currentTetromino =
-            Tetromino.update deltaInSeconds model.keyboard model.currentTetromino
+        updatedModel =
+            updateModel deltaInSeconds model
 
         commands =
-            if Tetromino.stoppedMoving currentTetromino then
+            if Tetromino.stoppedMoving updatedModel.currentTetromino then
                 [ Tetromino.generateRandomType TetrominoGenerated ]
 
             else
                 []
-
-        tetrominos =
-            if Tetromino.stoppedMoving currentTetromino then
-                model.tetrominos ++ [ currentTetromino ]
-
-            else
-                model.tetrominos
     in
-    ( { model | currentTetromino = currentTetromino, tetrominos = tetrominos }, Cmd.batch commands )
+    ( updatedModel, Cmd.batch commands )
+
+
+simulationStep =
+    0.02
+
+
+updateModel delta model =
+    if delta <= simulationStep then
+        let
+            currentTetromino =
+                Tetromino.update delta model.keyboard model.currentTetromino
+
+            tetrominos =
+                if Tetromino.stoppedMoving currentTetromino then
+                    model.tetrominos ++ [ currentTetromino ]
+
+                else
+                    model.tetrominos
+        in
+        { model | currentTetromino = currentTetromino, tetrominos = tetrominos }
+
+    else
+        updateModel (delta - simulationStep) (updateModel simulationStep model)
 
 
 onKeyChange model code action =
