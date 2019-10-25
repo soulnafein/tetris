@@ -1,12 +1,12 @@
 module Types exposing (Model, Msg(..))
 
 import Keyboard exposing (Keyboard)
-import Tetromino exposing (Tetromino, TetrominoType)
+import Tetromino exposing (Block, Tetromino, TetrominoType)
 
 
 type alias Model =
     { currentTetromino : Tetromino
-    , tetrominos : List Tetromino
+    , blocks : List Block
     , keyboard : Keyboard
     }
 

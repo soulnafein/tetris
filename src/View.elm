@@ -22,7 +22,7 @@ render model =
             , A.height (String.fromInt backgroundHeight)
             ]
             ([ drawBackground ]
-                ++ renderTetrominos (model.tetrominos ++ [ currentTetromino ])
+                ++ renderBlocks (model.blocks ++ currentTetromino.blocks)
             )
         , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyboard.keyPressed)
         ]
@@ -32,45 +32,12 @@ drawBackground =
     rect [ A.width (String.fromInt backgroundWidth), A.height (String.fromInt backgroundHeight), A.fill grey ] []
 
 
-renderTetrominos tetrominos =
-    tetrominos
-        |> List.concatMap renderTetromino
-
-
-renderTetromino tetromino =
-    let
-        color =
-            case tetromino.tetrominoType of
-                I ->
-                    cyan
-
-                J ->
-                    blue
-
-                O ->
-                    yellow
-
-                S ->
-                    green
-
-                Z ->
-                    red
-
-                T ->
-                    purple
-
-                L ->
-                    orange
-    in
-    renderBlocks color tetromino.blocks
-
-
-renderBlocks color blocks =
+renderBlocks blocks =
     blocks
-        |> List.map (renderBlock color)
+        |> List.map renderBlock
 
 
-renderBlock color block =
+renderBlock block =
     let
         size =
             String.fromInt squareSize
@@ -81,4 +48,4 @@ renderBlock color block =
         roundedY =
             String.fromInt (round block.y)
     in
-    rect [ A.width size, A.height size, A.fill color, A.x roundedX, A.y roundedY ] []
+    rect [ A.width size, A.height size, A.fill block.color, A.x roundedX, A.y roundedY ] []

@@ -56,14 +56,14 @@ updateModel delta model =
             currentTetromino =
                 Tetromino.update delta model.keyboard model.currentTetromino
 
-            tetrominos =
+            blocks =
                 if Tetromino.stoppedMoving currentTetromino then
-                    model.tetrominos ++ [ currentTetromino ]
+                    model.blocks ++ currentTetromino.blocks
 
                 else
-                    model.tetrominos
+                    model.blocks
         in
-        { model | currentTetromino = currentTetromino, tetrominos = tetrominos }
+        { model | currentTetromino = currentTetromino, blocks = blocks }
 
     else
         updateModel (delta - simulationStep) (updateModel simulationStep model)
@@ -84,7 +84,7 @@ onTetrominoGenerated model tetrominoType =
 init : ( Model, Cmd Msg )
 init =
     ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = I }
-      , tetrominos = []
+      , blocks = []
       , keyboard = { keyPressed = Nothing, leftArrowPressed = False, rightArrowPressed = False, upArrowPressed = False }
       }
     , Cmd.none

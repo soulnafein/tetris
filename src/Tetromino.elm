@@ -1,5 +1,6 @@
 module Tetromino exposing
-    ( Tetromino
+    ( Block
+    , Tetromino
     , TetrominoType(..)
     , create
     , createList
@@ -16,6 +17,7 @@ import Configuration
         , movingSpeed
         , squareSize
         )
+import Palette exposing (..)
 import Random
 
 
@@ -45,6 +47,7 @@ type alias Tetromino =
 type alias Block =
     { x : Float
     , y : Float
+    , color : String
     }
 
 
@@ -289,12 +292,39 @@ updateBlocks tetromino =
                 T ->
                     blocksT
 
+        color =
+            tetrominoColor tetromino
+
         blocks =
             blocksFunction tetromino.rotation
-                |> stringsToBlocks
+                |> stringsToBlocks color
                 |> List.map (convertCoordinates tetromino.x tetromino.y)
     in
     { tetromino | blocks = blocks }
+
+
+tetrominoColor tetromino =
+    case tetromino.tetrominoType of
+        I ->
+            cyan
+
+        J ->
+            blue
+
+        L ->
+            orange
+
+        O ->
+            yellow
+
+        S ->
+            green
+
+        Z ->
+            red
+
+        T ->
+            purple
 
 
 blocksI rotation =
@@ -452,12 +482,12 @@ convertCoordinates x y block =
     }
 
 
-stringsToBlocks rows =
-    List.indexedMap stringToBlocks rows
+stringsToBlocks color rows =
+    List.indexedMap (stringToBlocks color) rows
         |> List.concat
 
 
-stringToBlocks y string =
+stringToBlocks color y string =
     string
         |> String.indexes "#"
-        |> List.map (\x -> { x = toFloat x, y = toFloat y })
+        |> List.map (\x -> { x = toFloat x, y = toFloat y, color = color })
