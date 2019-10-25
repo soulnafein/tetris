@@ -1,7 +1,9 @@
 module Types exposing (Model, Msg(..))
 
+import Block exposing (Block)
 import Keyboard exposing (Keyboard)
-import Tetromino exposing (Block, Tetromino, TetrominoType)
+import Tetromino exposing (Tetromino)
+import TetrominoType exposing (TetrominoType)
 
 
 type alias Model =

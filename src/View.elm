@@ -7,7 +7,7 @@ import Maybe
 import Palette exposing (..)
 import Svg exposing (..)
 import Svg.Attributes as A
-import Tetromino exposing (Tetromino, TetrominoType(..))
+import Tetromino exposing (Tetromino)
 import Types exposing (Model, Msg)
 
 

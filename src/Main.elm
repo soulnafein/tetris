@@ -4,7 +4,8 @@ import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp)
 import Json.Decode as Decode
 import Keyboard exposing (Keyboard)
-import Tetromino exposing (Tetromino, TetrominoType(..))
+import Tetromino exposing (Tetromino)
+import TetrominoType exposing (TetrominoType)
 import Types exposing (Model, Msg(..))
 import View
 
@@ -83,11 +84,11 @@ onTetrominoGenerated model tetrominoType =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = I }
+    ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = TetrominoType.I }
       , blocks = []
       , keyboard = { keyPressed = Nothing, leftArrowPressed = False, rightArrowPressed = False, upArrowPressed = False }
       }
-    , Cmd.none
+    , Tetromino.generateRandomType TetrominoGenerated
     )
 
 

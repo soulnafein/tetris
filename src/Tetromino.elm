@@ -1,7 +1,5 @@
 module Tetromino exposing
-    ( Block
-    , Tetromino
-    , TetrominoType(..)
+    ( Tetromino
     , create
     , createList
     , generateRandomType
@@ -9,6 +7,7 @@ module Tetromino exposing
     , update
     )
 
+import Block exposing (Block)
 import Configuration
     exposing
         ( backgroundHeight
@@ -17,18 +16,9 @@ import Configuration
         , movingSpeed
         , squareSize
         )
-import Palette exposing (..)
 import Random
-
-
-type TetrominoType
-    = I
-    | J
-    | L
-    | O
-    | S
-    | Z
-    | T
+import Rotation exposing (Rotation(..))
+import TetrominoType exposing (TetrominoType(..))
 
 
 type alias Tetromino =
@@ -42,20 +32,6 @@ type alias Tetromino =
     , rotation : Rotation
     , hasJustRotated : Bool
     }
-
-
-type alias Block =
-    { x : Float
-    , y : Float
-    , color : String
-    }
-
-
-type Rotation
-    = North
-    | East
-    | South
-    | West
 
 
 create params =
@@ -95,7 +71,7 @@ updateRotation keyboard tetromino =
     let
         rotation =
             if keyboard.upArrowPressed && not tetromino.hasJustRotated then
-                nextRotation tetromino.rotation
+                Rotation.next tetromino.rotation
 
             else
                 tetromino.rotation
@@ -104,21 +80,6 @@ updateRotation keyboard tetromino =
             keyboard.upArrowPressed
     in
     { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
-
-
-nextRotation rotation =
-    case rotation of
-        North ->
-            East
-
-        East ->
-            South
-
-        South ->
-            West
-
-        West ->
-            North
 
 
 fall delta tetromino =
@@ -255,10 +216,6 @@ rightmostBlockX tetromino =
         |> Maybe.withDefault 0
 
 
-
--- any blocks reached bottom
-
-
 generateRandomType msg =
     Random.generate msg randomTetrominoGenerator
 
@@ -269,225 +226,11 @@ randomTetrominoGenerator =
 
 updateBlocks tetromino =
     let
-        blocksFunction =
-            case tetromino.tetrominoType of
-                I ->
-                    blocksI
-
-                J ->
-                    blocksJ
-
-                L ->
-                    blocksL
-
-                O ->
-                    blocksO
-
-                S ->
-                    blocksS
-
-                Z ->
-                    blocksZ
-
-                T ->
-                    blocksT
-
-        color =
-            tetrominoColor tetromino
-
         blocks =
-            blocksFunction tetromino.rotation
-                |> stringsToBlocks color
-                |> List.map (convertCoordinates tetromino.x tetromino.y)
+            Block.createByType
+                tetromino.tetrominoType
+                tetromino.rotation
+                tetromino.x
+                tetromino.y
     in
     { tetromino | blocks = blocks }
-
-
-tetrominoColor tetromino =
-    case tetromino.tetrominoType of
-        I ->
-            cyan
-
-        J ->
-            blue
-
-        L ->
-            orange
-
-        O ->
-            yellow
-
-        S ->
-            green
-
-        Z ->
-            red
-
-        T ->
-            purple
-
-
-blocksI rotation =
-    case rotation of
-        North ->
-            [ "OOOO"
-            , "####"
-            ]
-
-        East ->
-            [ "OO#O"
-            , "OO#O"
-            , "OO#O"
-            , "OO#O"
-            ]
-
-        South ->
-            [ "OOOO"
-            , "OOOO"
-            , "####"
-            ]
-
-        West ->
-            [ "O#OO"
-            , "O#OO"
-            , "O#OO"
-            , "O#OO"
-            ]
-
-
-blocksJ rotation =
-    case rotation of
-        North ->
-            [ "#OOO"
-            , "###O"
-            ]
-
-        East ->
-            [ "O##O"
-            , "O#OO"
-            , "O#OO"
-            ]
-
-        South ->
-            [ "OOOO"
-            , "###O"
-            , "OO#O"
-            ]
-
-        West ->
-            [ "O#OO"
-            , "O#OO"
-            , "##OO"
-            ]
-
-
-blocksL rotation =
-    case rotation of
-        North ->
-            [ "OO#O"
-            , "###O"
-            ]
-
-        East ->
-            [ "O#OO"
-            , "O#OO"
-            , "O##O"
-            ]
-
-        South ->
-            [ "OOOO"
-            , "###O"
-            , "#OOO"
-            ]
-
-        West ->
-            [ "##OO"
-            , "O#OO"
-            , "O#OO"
-            ]
-
-
-blocksO rotation =
-    case rotation of
-        _ ->
-            [ "0##0"
-            , "0##0"
-            ]
-
-
-blocksS rotation =
-    case rotation of
-        North ->
-            [ "O##O"
-            , "##OO"
-            ]
-
-        East ->
-            [ "O#OO"
-            , "O##O"
-            , "OO#O"
-            ]
-
-        South ->
-            [ "OOOO"
-            , "O##O"
-            , "##OO"
-            ]
-
-        West ->
-            [ "#OOO"
-            , "##OO"
-            , "O#OO"
-            ]
-
-
-blocksZ rotation =
-    case rotation of
-        North ->
-            [ "##OO"
-            , "O##O"
-            ]
-
-        East ->
-            [ "OO#O"
-            , "O##O"
-            , "O#OO"
-            ]
-
-        South ->
-            [ "OOOO"
-            , "##OO"
-            , "O##O"
-            ]
-
-        West ->
-            [ "O#OO"
-            , "##OO"
-            , "#OOO"
-            ]
-
-
-blocksT rotation =
-    case rotation of
-        _ ->
-            [ "O#OO"
-            , "###O"
-            ]
-
-
-convertCoordinates x y block =
-    { block
-        | x = block.x * squareSize + x
-        , y = block.y * squareSize + y
-    }
-
-
-stringsToBlocks color rows =
-    List.indexedMap (stringToBlocks color) rows
-        |> List.concat
-
-
-stringToBlocks color y string =
-    string
-        |> String.indexes "#"
-        |> List.map (\x -> { x = toFloat x, y = toFloat y, color = color })
