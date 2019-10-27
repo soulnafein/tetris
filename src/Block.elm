@@ -1,4 +1,11 @@
-module Block exposing (Block, createByType)
+module Block exposing
+    ( Block
+    , areCollidingTwoLists
+    , areCollidingWithHorizontalLine
+    , areCollidingWithLeftLine
+    , areCollidingWithRightLine
+    , createByType
+    )
 
 import Configuration exposing (squareSize)
 import Palette exposing (..)
@@ -11,6 +18,43 @@ type alias Block =
     , y : Float
     , color : String
     }
+
+
+verticalOverlapTwoBlocks a b =
+    if areColliding a b then
+        squareSize
+
+    else
+        0
+
+
+areColliding a b =
+    a.x == b.x && a.y == b.y
+
+
+areCollidingOneBlockAndList blocks a =
+    blocks
+        |> List.any (areColliding a)
+
+
+areCollidingTwoLists blocksA blocksB =
+    blocksA
+        |> List.any (areCollidingOneBlockAndList blocksB)
+
+
+areCollidingWithHorizontalLine y blocks =
+    blocks
+        |> List.any (\b -> b.y + squareSize > y)
+
+
+areCollidingWithLeftLine x blocks =
+    blocks
+        |> List.any (\b -> b.x < x)
+
+
+areCollidingWithRightLine x blocks =
+    blocks
+        |> List.any (\b -> (b.x + squareSize) > x)
 
 
 createByType tetrominoType rotation x y =

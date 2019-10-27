@@ -55,7 +55,7 @@ updateModel delta model =
     if delta <= simulationStep then
         let
             currentTetromino =
-                Tetromino.update delta model.keyboard model.currentTetromino
+                Tetromino.update delta model.keyboard model.currentTetromino model.blocks
 
             blocks =
                 if Tetromino.stoppedMoving currentTetromino then
@@ -86,7 +86,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = TetrominoType.I }
       , blocks = []
-      , keyboard = { keyPressed = Nothing, leftArrowPressed = False, rightArrowPressed = False, upArrowPressed = False }
+      , keyboard = Keyboard.init
       }
     , Tetromino.generateRandomType TetrominoGenerated
     )

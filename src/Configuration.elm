@@ -11,6 +11,7 @@ squareSize =
     30
 
 
+fallingSpeed : Float
 fallingSpeed =
     squareSize * 3
 

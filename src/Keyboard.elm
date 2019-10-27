@@ -1,10 +1,11 @@
-module Keyboard exposing (Keyboard, KeyboardAction(..), update)
+module Keyboard exposing (Keyboard, KeyboardAction(..), init, update)
 
 
 type alias Keyboard =
     { leftArrowPressed : Bool
     , rightArrowPressed : Bool
     , upArrowPressed : Bool
+    , bottomArrowPressed : Bool
     , keyPressed : Maybe String
     }
 
@@ -12,6 +13,15 @@ type alias Keyboard =
 type KeyboardAction
     = Pressed
     | Released
+
+
+init =
+    { leftArrowPressed = False
+    , rightArrowPressed = False
+    , upArrowPressed = False
+    , bottomArrowPressed = False
+    , keyPressed = Nothing
+    }
 
 
 update code keyboard action =
@@ -51,6 +61,9 @@ updateArrowState code isPressed keyboard =
 
         "ArrowUp" ->
             { keyboard | upArrowPressed = isPressed }
+
+        "ArrowDown" ->
+            { keyboard | bottomArrowPressed = isPressed }
 
         _ ->
             keyboard

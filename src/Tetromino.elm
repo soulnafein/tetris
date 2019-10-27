@@ -28,7 +28,7 @@ type alias Tetromino =
     , actualY : Float
     , tetrominoType : TetrominoType
     , blocks : List Block
-    , verticalSpeed : Int
+    , verticalSpeed : Float
     , rotation : Rotation
     , hasJustRotated : Bool
     }
@@ -53,21 +53,36 @@ createList listParams =
         |> List.map create
 
 
-update delta keyboard tetromino =
+update delta keyboard tetromino blocks =
     let
         horizontalSpeed =
             calculateHorizontalSpeed keyboard
     in
     tetromino
+        |> checkTurboMode keyboard
         |> fall delta
+        |> resolveVerticalCollisions blocks
         |> horizontalMovement delta horizontalSpeed
-        |> updateBlocks
-        |> resolveCollisions
-        |> updateBlocks
-        |> updateRotation keyboard
+        |> resolveHorizontalCollisions blocks keyboard
+        |> updateRotation keyboard blocks
 
 
-updateRotation keyboard tetromino =
+checkTurboMode keyboard tetromino =
+    let
+        speed =
+            if keyboard.bottomArrowPressed then
+                fallingSpeed * 5
+
+            else
+                fallingSpeed
+
+        xxx =
+            Debug.log "" speed
+    in
+    updateVerticalSpeed speed tetromino
+
+
+updateRotation keyboard blocks tetromino =
     let
         rotation =
             if keyboard.upArrowPressed && not tetromino.hasJustRotated then
@@ -78,13 +93,21 @@ updateRotation keyboard tetromino =
 
         hasJustRotated =
             keyboard.upArrowPressed
+
+        updatedTetromino =
+            { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
+                |> updateBlocks
     in
-    { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
+    if collidingHorizontally blocks updatedTetromino then
+        tetromino
+
+    else
+        updatedTetromino
 
 
 fall delta tetromino =
     tetromino
-        |> updateY (tetromino.actualY + (fallingSpeed * delta))
+        |> updateY (tetromino.actualY + (tetromino.verticalSpeed * delta))
 
 
 stickToGrid aNumber =
@@ -93,6 +116,7 @@ stickToGrid aNumber =
 
 updateY actualY tetromino =
     { tetromino | actualY = actualY, y = stickToGrid actualY }
+        |> updateBlocks
 
 
 horizontalMovement delta horizontalSpeed tetromino =
@@ -100,11 +124,14 @@ horizontalMovement delta horizontalSpeed tetromino =
         updatedActualX =
             tetromino.actualX + (horizontalSpeed * delta)
     in
-    updateX updatedActualX tetromino
+    tetromino
+        |> updateX updatedActualX
+        |> updateBlocks
 
 
 updateX actualX tetromino =
     { tetromino | actualX = actualX, x = stickToGrid actualX }
+        |> updateBlocks
 
 
 calculateHorizontalSpeed keyboard =
@@ -118,56 +145,59 @@ calculateHorizontalSpeed keyboard =
         0
 
 
-resolveBottomCollision tetromino =
-    let
-        verticalCollisionDistance =
-            lowestBlockY tetromino - backgroundHeight
-    in
-    if verticalCollisionDistance > 0 then
+resolveVerticalCollisions blocks tetromino =
+    if collidingBottomScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
         tetromino
-            |> updateY (tetromino.actualY - verticalCollisionDistance)
+            |> updateY (tetromino.y - squareSize)
             |> updateVerticalSpeed 0
 
     else
         tetromino
 
 
-resolveCollisions tetromino =
+collidingBottomScreen tetromino =
+    Block.areCollidingWithHorizontalLine backgroundHeight tetromino.blocks
+
+
+collidingLeftScreen tetromino =
+    Block.areCollidingWithLeftLine 0 tetromino.blocks
+
+
+collidingRightScreen tetromino =
+    Block.areCollidingWithRightLine backgroundWidth tetromino.blocks
+
+
+collidingHorizontally blocks tetromino =
+    collidingLeftScreen tetromino
+        || collidingRightScreen tetromino
+        || Block.areCollidingTwoLists tetromino.blocks blocks
+
+
+resolveHorizontalCollisions blocks keyboard tetromino =
     tetromino
-        |> resolveBottomCollision
-        |> resolveLeftCollision
-        |> resolveRightCollision
+        |> resolveLeftCollision blocks keyboard
+        |> resolveRightCollision blocks keyboard
 
 
-resolveLeftCollision tetromino =
-    let
-        leftCollisionDistance =
-            leftmostBlockX tetromino
-    in
-    if leftCollisionDistance < 0 then
-        let
-            updatedTetromino =
-                tetromino
-                    |> updateX (tetromino.actualX - leftCollisionDistance)
-        in
-        updatedTetromino
+resolveLeftCollision blocks keyboard tetromino =
+    if keyboard.leftArrowPressed then
+        if collidingLeftScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
+            updateX (tetromino.actualX + squareSize) tetromino
+
+        else
+            tetromino
 
     else
         tetromino
 
 
-resolveRightCollision tetromino =
-    let
-        rightCollisionDistance =
-            rightmostBlockX tetromino - backgroundWidth
-    in
-    if rightCollisionDistance > 0 then
-        let
-            updatedTetromino =
-                tetromino
-                    |> updateX (tetromino.actualX - rightCollisionDistance)
-        in
-        updatedTetromino
+resolveRightCollision blocks keyboard tetromino =
+    if keyboard.rightArrowPressed then
+        if collidingRightScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
+            updateX (tetromino.x - squareSize) tetromino
+
+        else
+            tetromino
 
     else
         tetromino
