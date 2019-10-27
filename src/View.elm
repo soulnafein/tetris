@@ -48,4 +48,8 @@ renderBlock block =
         roundedY =
             String.fromInt (round block.y)
     in
-    rect [ A.width size, A.height size, A.fill block.color, A.x roundedX, A.y roundedY ] []
+    rect [ A.width size, A.height size, A.fill block.color, A.x roundedX, A.y roundedY, A.stroke "black", A.strokeOpacity "0.2" ] []
+
+
+
+-- style="stroke-width:0.965;fill:#ff0000;fill-opacity:1;stroke:#00f500;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
