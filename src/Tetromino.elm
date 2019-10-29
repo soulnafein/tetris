@@ -7,6 +7,8 @@ module Tetromino exposing
     )
 
 import Block exposing (Block)
+import BlockFactory
+import Collisions
 import Configuration
     exposing
         ( backgroundHeight
@@ -47,16 +49,22 @@ init tetrominoType =
         |> updateBlocks
 
 
+updateY actualY tetromino =
+    { tetromino | actualY = actualY, y = stickToGrid actualY }
+        |> updateBlocks
+
+
+updateX actualX tetromino =
+    { tetromino | actualX = actualX, x = stickToGrid actualX }
+        |> updateBlocks
+
+
 update delta keyboard tetromino blocks score =
-    let
-        horizontalSpeed =
-            calculateHorizontalSpeed keyboard
-    in
     tetromino
         |> updateFallingSpeed keyboard (toFloat score)
         |> fall delta
         |> resolveVerticalCollisions blocks
-        |> horizontalMovement delta horizontalSpeed
+        |> horizontalMovement delta keyboard
         |> resolveHorizontalCollisions blocks keyboard
         |> updateRotation keyboard blocks
 
@@ -92,7 +100,7 @@ updateRotation keyboard blocks tetromino =
             { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
                 |> updateBlocks
     in
-    if collidingHorizontally blocks updatedTetromino then
+    if Collisions.horizontally blocks updatedTetromino then
         tetromino
 
     else
@@ -108,23 +116,16 @@ stickToGrid aNumber =
     toFloat (floor (aNumber / squareSize) * squareSize)
 
 
-updateY actualY tetromino =
-    { tetromino | actualY = actualY, y = stickToGrid actualY }
-        |> updateBlocks
-
-
-horizontalMovement delta horizontalSpeed tetromino =
+horizontalMovement delta keyboard tetromino =
     let
+        horizontalSpeed =
+            calculateHorizontalSpeed keyboard
+
         updatedActualX =
             tetromino.actualX + (horizontalSpeed * delta)
     in
     tetromino
         |> updateX updatedActualX
-        |> updateBlocks
-
-
-updateX actualX tetromino =
-    { tetromino | actualX = actualX, x = stickToGrid actualX }
         |> updateBlocks
 
 
@@ -140,31 +141,13 @@ calculateHorizontalSpeed keyboard =
 
 
 resolveVerticalCollisions blocks tetromino =
-    if collidingBottomScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
+    if Collisions.bottomScreen tetromino || Collisions.withBlocks tetromino blocks then
         tetromino
             |> updateY (tetromino.y - squareSize)
             |> updateVerticalSpeed 0
 
     else
         tetromino
-
-
-collidingBottomScreen tetromino =
-    Block.areCollidingWithHorizontalLine backgroundHeight tetromino.blocks
-
-
-collidingLeftScreen tetromino =
-    Block.areCollidingWithLeftLine 0 tetromino.blocks
-
-
-collidingRightScreen tetromino =
-    Block.areCollidingWithRightLine backgroundWidth tetromino.blocks
-
-
-collidingHorizontally blocks tetromino =
-    collidingLeftScreen tetromino
-        || collidingRightScreen tetromino
-        || Block.areCollidingTwoLists tetromino.blocks blocks
 
 
 resolveHorizontalCollisions blocks keyboard tetromino =
@@ -175,7 +158,7 @@ resolveHorizontalCollisions blocks keyboard tetromino =
 
 resolveLeftCollision blocks keyboard tetromino =
     if keyboard.leftArrowPressed then
-        if collidingLeftScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
+        if Collisions.leftScreen tetromino || Collisions.withBlocks tetromino blocks then
             updateX (tetromino.actualX + squareSize) tetromino
 
         else
@@ -187,7 +170,7 @@ resolveLeftCollision blocks keyboard tetromino =
 
 resolveRightCollision blocks keyboard tetromino =
     if keyboard.rightArrowPressed then
-        if collidingRightScreen tetromino || Block.areCollidingTwoLists tetromino.blocks blocks then
+        if Collisions.rightScreen tetromino || Collisions.withBlocks tetromino blocks then
             updateX (tetromino.x - squareSize) tetromino
 
         else
@@ -205,10 +188,6 @@ stoppedMoving tetromino =
     tetromino.verticalSpeed == 0
 
 
-reachedBottom tetromino =
-    tetromino.y > backgroundHeight
-
-
 generateRandomType msg =
     Random.generate msg randomTetrominoGenerator
 
@@ -220,7 +199,7 @@ randomTetrominoGenerator =
 updateBlocks tetromino =
     let
         blocks =
-            Block.createByType
+            BlockFactory.createByType
                 tetromino.tetrominoType
                 tetromino.rotation
                 tetromino.x
