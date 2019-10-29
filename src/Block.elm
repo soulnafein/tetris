@@ -8,7 +8,7 @@ module Block exposing
     , update
     )
 
-import Configuration exposing (squareSize)
+import Configuration exposing (gridWidth, squareSize)
 import List exposing (..)
 import Palette exposing (..)
 import Rotation exposing (Rotation(..))
@@ -307,17 +307,17 @@ convertCoordinates x y block =
     }
 
 
-update blocks =
+update ( blocks, points ) =
     let
         lineToDelete =
             nextLineToDelete blocks
     in
     case lineToDelete of
         Nothing ->
-            blocks
+            ( blocks, points )
 
         Just y ->
-            update (removeLine y blocks)
+            update ( removeLine y blocks, 50 )
 
 
 nextLineToDelete blocks =
@@ -337,7 +337,7 @@ lineFull blocks y =
                 |> List.filter (\b -> b.y == y)
                 |> List.length
     in
-    numberOfBlocksInLine == 10
+    numberOfBlocksInLine == gridWidth
 
 
 removeLine y blocks =

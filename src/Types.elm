@@ -10,6 +10,7 @@ type alias Model =
     { currentTetromino : Tetromino
     , blocks : List Block
     , keyboard : Keyboard
+    , score : Int
     }
 
 

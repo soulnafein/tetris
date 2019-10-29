@@ -24,7 +24,7 @@ render model =
             ([ drawBackground ]
                 ++ renderBlocks (model.blocks ++ currentTetromino.blocks)
             )
-        , Html.text (Maybe.withDefault "NO KEY PRESSED" model.keyboard.keyPressed)
+        , Html.text ("Score: " ++ String.fromInt model.score)
         ]
 
 

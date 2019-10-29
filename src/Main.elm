@@ -65,10 +65,10 @@ updateModel delta model =
                 else
                     model.blocks
 
-            updatedBlocks =
-                Block.update blocks
+            ( updatedBlocks, points ) =
+                Block.update ( blocks, 0 )
         in
-        { model | currentTetromino = currentTetromino, blocks = updatedBlocks }
+        { model | currentTetromino = currentTetromino, blocks = updatedBlocks, score = model.score + points }
 
     else
         updateModel (delta - simulationStep) (updateModel simulationStep model)
@@ -91,6 +91,7 @@ init =
     ( { currentTetromino = Tetromino.create { x = 0, y = 0, tetrominoType = TetrominoType.I }
       , blocks = []
       , keyboard = Keyboard.init
+      , score = 0
       }
     , Tetromino.generateRandomType TetrominoGenerated
     )
