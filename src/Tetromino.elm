@@ -75,9 +75,6 @@ checkTurboMode keyboard tetromino =
 
             else
                 fallingSpeed
-
-        xxx =
-            Debug.log "" speed
     in
     updateVerticalSpeed speed tetromino
 

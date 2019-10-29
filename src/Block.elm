@@ -5,9 +5,11 @@ module Block exposing
     , areCollidingWithLeftLine
     , areCollidingWithRightLine
     , createByType
+    , update
     )
 
 import Configuration exposing (squareSize)
+import List exposing (..)
 import Palette exposing (..)
 import Rotation exposing (Rotation(..))
 import TetrominoType exposing (TetrominoType(..))
@@ -98,7 +100,14 @@ createFromStrings color rows =
 stringToBlocks color y string =
     string
         |> String.indexes "#"
-        |> List.map (\x -> { x = toFloat x, y = toFloat y, color = color })
+        |> List.map (\x -> create { x = toFloat x, y = toFloat y, color = color })
+
+
+create block =
+    { x = block.x
+    , y = block.y
+    , color = block.color
+    }
 
 
 tetrominoColor tetrominoType =
@@ -296,3 +305,50 @@ convertCoordinates x y block =
         | x = block.x * squareSize + x
         , y = block.y * squareSize + y
     }
+
+
+update blocks =
+    let
+        lineToDelete =
+            nextLineToDelete blocks
+    in
+    case lineToDelete of
+        Nothing ->
+            blocks
+
+        Just y ->
+            update (removeLine y blocks)
+
+
+nextLineToDelete blocks =
+    let
+        lines =
+            blocks |> List.map .y
+    in
+    lines
+        |> List.filter (lineFull blocks)
+        |> List.head
+
+
+lineFull blocks y =
+    let
+        numberOfBlocksInLine =
+            blocks
+                |> List.filter (\b -> b.y == y)
+                |> List.length
+    in
+    numberOfBlocksInLine == 10
+
+
+removeLine y blocks =
+    let
+        blocksToMove =
+            blocks
+                |> List.filter (\b -> b.y < y)
+                |> List.map (\b -> { b | y = b.y + squareSize })
+
+        blocksToLeave =
+            blocks
+                |> List.filter (\b -> b.y > y)
+    in
+    blocksToMove ++ blocksToLeave

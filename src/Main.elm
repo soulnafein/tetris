@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Block exposing (Block)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp)
 import Json.Decode as Decode
@@ -63,8 +64,11 @@ updateModel delta model =
 
                 else
                     model.blocks
+
+            updatedBlocks =
+                Block.update blocks
         in
-        { model | currentTetromino = currentTetromino, blocks = blocks }
+        { model | currentTetromino = currentTetromino, blocks = updatedBlocks }
 
     else
         updateModel (delta - simulationStep) (updateModel simulationStep model)
