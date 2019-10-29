@@ -23,7 +23,7 @@ type Msg
 
 
 init =
-    { tetromino = Tetromino.create { x = 0, y = 0, tetrominoType = TetrominoType.I }
+    { tetromino = Tetromino.init TetrominoType.I
     , blocks = []
     , keyboard = Keyboard.init
     , score = 0
@@ -32,27 +32,31 @@ init =
 
 update delta model =
     if delta <= simulationStep then
-        let
-            tetromino =
-                Tetromino.update delta model.keyboard model.tetromino model.blocks
-
-            blocks =
-                if Tetromino.stoppedMoving tetromino then
-                    model.blocks ++ tetromino.blocks
-
-                else
-                    model.blocks
-
-            ( updatedBlocks, points ) =
-                Block.update ( blocks, 0 )
-        in
-        { model | tetromino = tetromino, blocks = updatedBlocks, score = model.score + points }
+        updateOneStep delta model
 
     else if delta > simulationStep * 20 then
         model
 
     else
-        update (delta - simulationStep) (update simulationStep model)
+        update (delta - simulationStep) (updateOneStep simulationStep model)
+
+
+updateOneStep delta model =
+    let
+        tetromino =
+            Tetromino.update delta model.keyboard model.tetromino model.blocks model.score
+
+        blocks =
+            if Tetromino.stoppedMoving tetromino then
+                model.blocks ++ tetromino.blocks
+
+            else
+                model.blocks
+
+        ( updatedBlocks, points ) =
+            Block.update ( blocks, 0 )
+    in
+    { model | tetromino = tetromino, blocks = updatedBlocks, score = model.score + points }
 
 
 simulationStep =

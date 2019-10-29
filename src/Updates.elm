@@ -7,15 +7,15 @@ import Tetromino exposing (Tetromino)
 
 
 onKeyChange model code action =
-    ( { model | keyboard = Keyboard.update code model.keyboard action }, Cmd.none )
+    ( { model | keyboard = Keyboard.update code model.keyboard action }
+    , Cmd.none
+    )
 
 
 onTetrominoGenerated model tetrominoType =
-    let
-        newTetromino =
-            Tetromino.create { x = 0, y = 0, tetrominoType = tetrominoType }
-    in
-    ( { model | tetromino = newTetromino }, Cmd.none )
+    ( { model | tetromino = Tetromino.init tetrominoType }
+    , Cmd.none
+    )
 
 
 onFrameUpdate model delta =

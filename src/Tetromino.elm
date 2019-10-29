@@ -1,8 +1,7 @@
 module Tetromino exposing
     ( Tetromino
-    , create
-    , createList
     , generateRandomType
+    , init
     , stoppedMoving
     , update
     )
@@ -34,32 +33,27 @@ type alias Tetromino =
     }
 
 
-create params =
-    { x = params.x
-    , y = params.y
-    , actualX = params.x
-    , actualY = params.y
-    , tetrominoType = params.tetrominoType
+init tetrominoType =
+    { x = 0
+    , y = 0
+    , actualX = 0
+    , actualY = 0
+    , tetrominoType = tetrominoType
     , verticalSpeed = fallingSpeed
-    , rotation = East
+    , rotation = North
     , hasJustRotated = False
     , blocks = []
     }
         |> updateBlocks
 
 
-createList listParams =
-    listParams
-        |> List.map create
-
-
-update delta keyboard tetromino blocks =
+update delta keyboard tetromino blocks score =
     let
         horizontalSpeed =
             calculateHorizontalSpeed keyboard
     in
     tetromino
-        |> checkTurboMode keyboard
+        |> updateFallingSpeed keyboard (toFloat score)
         |> fall delta
         |> resolveVerticalCollisions blocks
         |> horizontalMovement delta horizontalSpeed
@@ -67,14 +61,17 @@ update delta keyboard tetromino blocks =
         |> updateRotation keyboard blocks
 
 
-checkTurboMode keyboard tetromino =
+updateFallingSpeed keyboard score tetromino =
     let
+        modifiedSpeed =
+            fallingSpeed * (1 + (score / 700))
+
         speed =
             if keyboard.bottomArrowPressed then
-                fallingSpeed * 5
+                modifiedSpeed + (5 * fallingSpeed)
 
             else
-                fallingSpeed
+                modifiedSpeed
     in
     updateVerticalSpeed speed tetromino
 

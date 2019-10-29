@@ -317,7 +317,7 @@ update ( blocks, points ) =
             ( blocks, points )
 
         Just y ->
-            update ( removeLine y blocks, 50 )
+            update ( removeLine y blocks, 50 + points )
 
 
 nextLineToDelete blocks =
