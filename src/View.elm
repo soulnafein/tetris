@@ -4,17 +4,17 @@ import Configuration exposing (backgroundHeight, backgroundWidth, squareSize)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
 import Maybe
+import Model exposing (Model, Msg)
 import Palette exposing (..)
 import Svg exposing (..)
 import Svg.Attributes as A
 import Tetromino exposing (Tetromino)
-import Types exposing (Model, Msg)
 
 
 render model =
     let
-        currentTetromino =
-            model.currentTetromino
+        tetromino =
+            model.tetromino
     in
     div []
         [ svg
@@ -22,7 +22,7 @@ render model =
             , A.height (String.fromInt backgroundHeight)
             ]
             ([ drawBackground ]
-                ++ renderBlocks (model.blocks ++ currentTetromino.blocks)
+                ++ renderBlocks (model.blocks ++ tetromino.blocks)
             )
         , Html.text ("Score: " ++ String.fromInt model.score)
         ]

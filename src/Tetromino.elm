@@ -212,37 +212,6 @@ reachedBottom tetromino =
     tetromino.y > backgroundHeight
 
 
-lowestBlockY : Tetromino -> Float
-lowestBlockY tetromino =
-    tetromino.blocks
-        |> List.map .y
-        |> List.map (\y -> y + squareSize)
-        |> List.sort
-        |> List.reverse
-        |> List.head
-        |> Maybe.withDefault 0
-
-
-leftmostBlockX : Tetromino -> Float
-leftmostBlockX tetromino =
-    tetromino.blocks
-        |> List.map .x
-        |> List.sort
-        |> List.head
-        |> Maybe.withDefault 0
-
-
-rightmostBlockX : Tetromino -> Float
-rightmostBlockX tetromino =
-    tetromino.blocks
-        |> List.map .x
-        |> List.map (\x -> x + squareSize)
-        |> List.sort
-        |> List.reverse
-        |> List.head
-        |> Maybe.withDefault 0
-
-
 generateRandomType msg =
     Random.generate msg randomTetrominoGenerator
 
