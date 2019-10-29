@@ -45,7 +45,11 @@ onFrameUpdate model delta =
             else
                 []
     in
-    ( updatedModel, Cmd.batch commands )
+    if updatedModel.currentTetromino.y < 0 then
+        init
+
+    else
+        ( updatedModel, Cmd.batch commands )
 
 
 simulationStep =
@@ -69,6 +73,9 @@ updateModel delta model =
                 Block.update ( blocks, 0 )
         in
         { model | currentTetromino = currentTetromino, blocks = updatedBlocks, score = model.score + points }
+
+    else if delta > simulationStep * 20 then
+        model
 
     else
         updateModel (delta - simulationStep) (updateModel simulationStep model)
