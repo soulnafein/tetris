@@ -8,6 +8,7 @@ type Rotation
     | West
 
 
+next : Rotation -> Rotation
 next rotation =
     case rotation of
         North ->

@@ -11,12 +11,11 @@ import BlockFactory
 import Collisions
 import Configuration
     exposing
-        ( backgroundHeight
-        , backgroundWidth
-        , fallingSpeed
+        ( fallingSpeed
         , movingSpeed
         , squareSize
         )
+import Keyboard exposing (Keyboard)
 import Random
 import Rotation exposing (Rotation(..))
 import TetrominoType exposing (TetrominoType(..))
@@ -35,13 +34,14 @@ type alias Tetromino =
     }
 
 
+init : TetrominoType -> Tetromino
 init tetrominoType =
     { x = 0
     , y = 0
     , actualX = 0
     , actualY = 0
     , tetrominoType = tetrominoType
-    , verticalSpeed = fallingSpeed
+    , verticalSpeed = toFloat fallingSpeed
     , rotation = North
     , hasJustRotated = False
     , blocks = []
@@ -49,16 +49,19 @@ init tetrominoType =
         |> updateBlocks
 
 
+updateY : Float -> Tetromino -> Tetromino
 updateY actualY tetromino =
     { tetromino | actualY = actualY, y = stickToGrid actualY }
         |> updateBlocks
 
 
+updateX : Float -> Tetromino -> Tetromino
 updateX actualX tetromino =
     { tetromino | actualX = actualX, x = stickToGrid actualX }
         |> updateBlocks
 
 
+update : Float -> Keyboard -> Tetromino -> List Block -> Int -> Tetromino
 update delta keyboard tetromino blocks score =
     tetromino
         |> updateFallingSpeed keyboard (toFloat score)
@@ -69,14 +72,18 @@ update delta keyboard tetromino blocks score =
         |> updateRotation keyboard blocks
 
 
+updateFallingSpeed : Keyboard -> Float -> Tetromino -> Tetromino
 updateFallingSpeed keyboard score tetromino =
     let
+        floatFallingSpeed =
+            toFloat fallingSpeed
+
         modifiedSpeed =
-            fallingSpeed * (1 + (score / 700))
+            floatFallingSpeed * (1 + (score / 700))
 
         speed =
             if keyboard.bottomArrowPressed then
-                modifiedSpeed + (5 * fallingSpeed)
+                modifiedSpeed + (5 * floatFallingSpeed)
 
             else
                 modifiedSpeed
@@ -84,6 +91,7 @@ updateFallingSpeed keyboard score tetromino =
     updateVerticalSpeed speed tetromino
 
 
+updateRotation : Keyboard -> List Block -> Tetromino -> Tetromino
 updateRotation keyboard blocks tetromino =
     let
         rotation =
@@ -100,35 +108,39 @@ updateRotation keyboard blocks tetromino =
             { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
                 |> updateBlocks
     in
-    if Collisions.horizontally blocks updatedTetromino then
+    if Collisions.horizontally blocks updatedTetromino.blocks then
         tetromino
 
     else
         updatedTetromino
 
 
+fall : Float -> Tetromino -> Tetromino
 fall delta tetromino =
     tetromino
         |> updateY (tetromino.actualY + (tetromino.verticalSpeed * delta))
 
 
+stickToGrid : Float -> Float
 stickToGrid aNumber =
-    toFloat (floor (aNumber / squareSize) * squareSize)
+    toFloat (floor (aNumber / toFloat squareSize) * squareSize)
 
 
+horizontalMovement : Float -> Keyboard -> Tetromino -> Tetromino
 horizontalMovement delta keyboard tetromino =
     let
         horizontalSpeed =
             calculateHorizontalSpeed keyboard
 
         updatedActualX =
-            tetromino.actualX + (horizontalSpeed * delta)
+            tetromino.actualX + (toFloat horizontalSpeed * delta)
     in
     tetromino
         |> updateX updatedActualX
         |> updateBlocks
 
 
+calculateHorizontalSpeed : Keyboard -> Int
 calculateHorizontalSpeed keyboard =
     if keyboard.leftArrowPressed then
         -movingSpeed
@@ -140,26 +152,37 @@ calculateHorizontalSpeed keyboard =
         0
 
 
+resolveVerticalCollisions : List Block -> Tetromino -> Tetromino
 resolveVerticalCollisions blocks tetromino =
-    if Collisions.bottomScreen tetromino || Collisions.withBlocks tetromino blocks then
+    let
+        tetrominoBlocks =
+            tetromino.blocks
+    in
+    if Collisions.bottomScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
         tetromino
-            |> updateY (tetromino.y - squareSize)
+            |> updateY (tetromino.y - toFloat squareSize)
             |> updateVerticalSpeed 0
 
     else
         tetromino
 
 
+resolveHorizontalCollisions : List Block -> Keyboard -> Tetromino -> Tetromino
 resolveHorizontalCollisions blocks keyboard tetromino =
     tetromino
         |> resolveLeftCollision blocks keyboard
         |> resolveRightCollision blocks keyboard
 
 
+resolveLeftCollision : List Block -> Keyboard -> Tetromino -> Tetromino
 resolveLeftCollision blocks keyboard tetromino =
+    let
+        tetrominoBlocks =
+            tetromino.blocks
+    in
     if keyboard.leftArrowPressed then
-        if Collisions.leftScreen tetromino || Collisions.withBlocks tetromino blocks then
-            updateX (tetromino.actualX + squareSize) tetromino
+        if Collisions.leftScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
+            updateX (tetromino.actualX + toFloat squareSize) tetromino
 
         else
             tetromino
@@ -168,10 +191,15 @@ resolveLeftCollision blocks keyboard tetromino =
         tetromino
 
 
+resolveRightCollision : List Block -> Keyboard -> Tetromino -> Tetromino
 resolveRightCollision blocks keyboard tetromino =
+    let
+        tetrominoBlocks =
+            tetromino.blocks
+    in
     if keyboard.rightArrowPressed then
-        if Collisions.rightScreen tetromino || Collisions.withBlocks tetromino blocks then
-            updateX (tetromino.x - squareSize) tetromino
+        if Collisions.rightScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
+            updateX (tetromino.x - toFloat squareSize) tetromino
 
         else
             tetromino
@@ -180,10 +208,12 @@ resolveRightCollision blocks keyboard tetromino =
         tetromino
 
 
+updateVerticalSpeed : Float -> Tetromino -> Tetromino
 updateVerticalSpeed speed tetromino =
     { tetromino | verticalSpeed = speed }
 
 
+stoppedMoving : Tetromino -> Bool
 stoppedMoving tetromino =
     tetromino.verticalSpeed == 0
 
@@ -192,10 +222,12 @@ generateRandomType msg =
     Random.generate msg randomTetrominoGenerator
 
 
+randomTetrominoGenerator : Random.Generator TetrominoType
 randomTetrominoGenerator =
     Random.uniform I [ J, L, O, S, Z, T ]
 
 
+updateBlocks : Tetromino -> Tetromino
 updateBlocks tetromino =
     let
         blocks =

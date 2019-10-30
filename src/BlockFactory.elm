@@ -1,12 +1,13 @@
 module BlockFactory exposing (createByType)
 
-import Block
+import Block exposing (Block)
 import Configuration exposing (squareSize)
-import Palette exposing (..)
+import Palette
 import Rotation exposing (Rotation(..))
 import TetrominoType exposing (TetrominoType(..))
 
 
+createByType : TetrominoType -> Rotation -> Float -> Float -> List Block
 createByType tetrominoType rotation x y =
     let
         blocksFunction =
@@ -40,41 +41,45 @@ createByType tetrominoType rotation x y =
         |> List.map (convertCoordinates x y)
 
 
+createFromStrings : String -> List String -> List Block
 createFromStrings color rows =
     List.indexedMap (stringToBlocks color) rows
         |> List.concat
 
 
+stringToBlocks : String -> Int -> String -> List Block
 stringToBlocks color y string =
     string
         |> String.indexes "#"
         |> List.map (\x -> Block.create { x = toFloat x, y = toFloat y, color = color })
 
 
+tetrominoColor : TetrominoType -> String
 tetrominoColor tetrominoType =
     case tetrominoType of
         I ->
-            cyan
+            Palette.cyan
 
         J ->
-            blue
+            Palette.blue
 
         L ->
-            orange
+            Palette.orange
 
         O ->
-            yellow
+            Palette.yellow
 
         S ->
-            green
+            Palette.green
 
         Z ->
-            red
+            Palette.red
 
         T ->
-            purple
+            Palette.purple
 
 
+blocksI : Rotation -> List String
 blocksI rotation =
     case rotation of
         North ->
@@ -103,6 +108,7 @@ blocksI rotation =
             ]
 
 
+blocksJ : Rotation -> List String
 blocksJ rotation =
     case rotation of
         North ->
@@ -129,6 +135,7 @@ blocksJ rotation =
             ]
 
 
+blocksL : Rotation -> List String
 blocksL rotation =
     case rotation of
         North ->
@@ -155,6 +162,7 @@ blocksL rotation =
             ]
 
 
+blocksO : Rotation -> List String
 blocksO rotation =
     case rotation of
         _ ->
@@ -163,6 +171,7 @@ blocksO rotation =
             ]
 
 
+blocksS : Rotation -> List String
 blocksS rotation =
     case rotation of
         North ->
@@ -189,6 +198,7 @@ blocksS rotation =
             ]
 
 
+blocksZ : Rotation -> List String
 blocksZ rotation =
     case rotation of
         North ->
@@ -215,6 +225,7 @@ blocksZ rotation =
             ]
 
 
+blocksT : Rotation -> List String
 blocksT rotation =
     case rotation of
         North ->
@@ -241,8 +252,9 @@ blocksT rotation =
             ]
 
 
+convertCoordinates : Float -> Float -> Block -> Block
 convertCoordinates x y block =
     { block
-        | x = block.x * squareSize + x
-        , y = block.y * squareSize + y
+        | x = block.x * toFloat squareSize + x
+        , y = block.y * toFloat squareSize + y
     }

@@ -1,16 +1,16 @@
 module View exposing (render)
 
+import Block exposing (Block)
 import Configuration exposing (backgroundHeight, backgroundWidth, squareSize)
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (src)
-import Maybe
+import Html exposing (Html, div, text)
 import Model exposing (Model, Msg)
-import Palette exposing (..)
-import Svg exposing (..)
+import Palette exposing (grey)
+import Svg exposing (Svg, rect, svg)
 import Svg.Attributes as A
-import Tetromino exposing (Tetromino)
+import Tetromino
 
 
+render : Model -> Html Msg
 render model =
     let
         tetromino =
@@ -28,15 +28,18 @@ render model =
         ]
 
 
+drawBackground : Svg a
 drawBackground =
     rect [ A.width (String.fromInt backgroundWidth), A.height (String.fromInt backgroundHeight), A.fill grey ] []
 
 
+renderBlocks : List Block -> List (Svg a)
 renderBlocks blocks =
     blocks
         |> List.map renderBlock
 
 
+renderBlock : Block -> Svg a
 renderBlock block =
     let
         size =

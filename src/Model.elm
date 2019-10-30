@@ -22,6 +22,7 @@ type Msg
     | TetrominoGenerated TetrominoType
 
 
+init : Model
 init =
     { tetromino = Tetromino.init TetrominoType.I
     , blocks = []
@@ -30,6 +31,7 @@ init =
     }
 
 
+update : Float -> Model -> Model
 update delta model =
     if delta <= simulationStep then
         updateOneStep delta model
@@ -41,6 +43,7 @@ update delta model =
         update (delta - simulationStep) (updateOneStep simulationStep model)
 
 
+updateOneStep : Float -> Model -> Model
 updateOneStep delta model =
     let
         tetromino =
@@ -59,5 +62,6 @@ updateOneStep delta model =
     { model | tetromino = tetromino, blocks = updatedBlocks, score = model.score + points }
 
 
+simulationStep : Float
 simulationStep =
     0.02

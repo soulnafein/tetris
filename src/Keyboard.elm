@@ -15,6 +15,7 @@ type KeyboardAction
     | Released
 
 
+init : Keyboard
 init =
     { leftArrowPressed = False
     , rightArrowPressed = False
@@ -24,6 +25,7 @@ init =
     }
 
 
+update : String -> Keyboard -> KeyboardAction -> Keyboard
 update code keyboard action =
     let
         isPressed =
@@ -39,6 +41,7 @@ update code keyboard action =
         |> updateArrowState code isPressed
 
 
+updateKeyPressed : String -> Bool -> Keyboard -> Keyboard
 updateKeyPressed code isPressed keyboard =
     let
         keyPressed =
@@ -51,6 +54,7 @@ updateKeyPressed code isPressed keyboard =
     { keyboard | keyPressed = keyPressed }
 
 
+updateArrowState : String -> Bool -> Keyboard -> Keyboard
 updateArrowState code isPressed keyboard =
     case code of
         "ArrowLeft" ->

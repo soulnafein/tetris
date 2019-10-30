@@ -5,8 +5,7 @@ module Block exposing
     )
 
 import Configuration exposing (gridWidth, squareSize)
-import List exposing (..)
-import Palette exposing (..)
+import List exposing (filter, head, length, map)
 import Rotation exposing (Rotation(..))
 import TetrominoType exposing (TetrominoType(..))
 
@@ -18,6 +17,7 @@ type alias Block =
     }
 
 
+create : Block -> Block
 create block =
     { x = block.x
     , y = block.y
@@ -25,6 +25,7 @@ create block =
     }
 
 
+update : ( List Block, Int ) -> ( List Block, Int )
 update ( blocks, points ) =
     let
         lineToDelete =
@@ -38,6 +39,7 @@ update ( blocks, points ) =
             update ( removeLine y blocks, 50 + points )
 
 
+nextLineToDelete : List Block -> Maybe Float
 nextLineToDelete blocks =
     let
         lines =
@@ -48,6 +50,7 @@ nextLineToDelete blocks =
         |> List.head
 
 
+lineFull : List Block -> Float -> Bool
 lineFull blocks y =
     let
         numberOfBlocksInLine =
@@ -58,12 +61,13 @@ lineFull blocks y =
     numberOfBlocksInLine == gridWidth
 
 
+removeLine : Float -> List Block -> List Block
 removeLine y blocks =
     let
         blocksToMove =
             blocks
                 |> List.filter (\b -> b.y < y)
-                |> List.map (\b -> { b | y = b.y + squareSize })
+                |> List.map (\b -> { b | y = b.y + toFloat squareSize })
 
         blocksToLeave =
             blocks

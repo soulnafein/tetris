@@ -1,11 +1,11 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp)
 import Json.Decode as Decode
-import Keyboard exposing (Keyboard)
+import Keyboard
 import Model exposing (Model, Msg(..))
-import Tetromino exposing (Tetromino)
+import Tetromino
 import Updates
 import View
 
@@ -46,7 +46,8 @@ init =
     )
 
 
-subscriptions model =
+subscriptions : Model -> Sub Msg
+subscriptions _ =
     Sub.batch
         [ onAnimationFrameDelta FrameUpdate
         , onKeyDown (Decode.map KeyDown keyDecoder)
