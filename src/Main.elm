@@ -5,6 +5,7 @@ import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp)
 import Json.Decode as Decode
 import Keyboard
 import Model exposing (Model, Msg(..))
+import Random
 import Tetromino
 import Updates
 import View
@@ -35,6 +36,9 @@ update msg model =
         TetrominoGenerated tetrominoType ->
             Updates.onTetrominoGenerated model tetrominoType
 
+        InitialSeed initialSeed ->
+            ( { model | seed = initialSeed }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )
 
@@ -42,7 +46,10 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( Model.init
-    , Tetromino.generateRandomType TetrominoGenerated
+    , Cmd.batch
+        [ Tetromino.generateRandomType TetrominoGenerated
+        , Random.generate InitialSeed (Random.int 0 9999999)
+        ]
     )
 
 

@@ -11,6 +11,8 @@ type alias Model =
     , blocks : List Block
     , keyboard : Keyboard
     , score : Int
+    , seed : Int
+    , nextTetrominos : List Tetromino
     }
 
 
@@ -20,6 +22,7 @@ type Msg
     | KeyUp String
     | KeyDown String
     | TetrominoGenerated TetrominoType
+    | InitialSeed Int
 
 
 init : Model
@@ -28,6 +31,8 @@ init =
     , blocks = []
     , keyboard = Keyboard.init
     , score = 0
+    , seed = 0
+    , nextTetrominos = []
     }
 
 
@@ -45,21 +50,40 @@ update delta model =
 
 updateOneStep : Float -> Model -> Model
 updateOneStep delta model =
+    model
+        |> updateTetromino delta
+        |> addTetrominoToBlocks
+        |> checkRowCompletion
+
+
+updateTetromino : Float -> Model -> Model
+updateTetromino delta model =
+    { model
+        | tetromino = Tetromino.update delta model.keyboard model.tetromino model.blocks model.score
+    }
+
+
+addTetrominoToBlocks : Model -> Model
+addTetrominoToBlocks model =
+    if Tetromino.stoppedMoving model.tetromino then
+        { model
+            | blocks = model.blocks ++ model.tetromino.blocks
+        }
+
+    else
+        model
+
+
+checkRowCompletion : Model -> Model
+checkRowCompletion model =
     let
-        tetromino =
-            Tetromino.update delta model.keyboard model.tetromino model.blocks model.score
-
-        blocks =
-            if Tetromino.stoppedMoving tetromino then
-                model.blocks ++ tetromino.blocks
-
-            else
-                model.blocks
-
-        ( updatedBlocks, points ) =
-            Block.update ( blocks, 0 )
+        ( blocks, points ) =
+            Block.update ( model.blocks, 0 )
     in
-    { model | tetromino = tetromino, blocks = updatedBlocks, score = model.score + points }
+    { model
+        | blocks = blocks
+        , score = model.score + points
+    }
 
 
 simulationStep : Float
