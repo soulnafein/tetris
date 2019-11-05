@@ -1,7 +1,7 @@
-module BlockFactory exposing (createByType)
+module BlockMaker exposing (createByType, createScreenFrame)
 
 import Block exposing (Block)
-import Configuration exposing (squareSize)
+import Configuration exposing (gridHeight, gridWidth, squareSize)
 import Palette
 import Rotation exposing (Rotation(..))
 import TetrominoType exposing (TetrominoType(..))
@@ -258,3 +258,22 @@ convertCoordinates x y block =
         | x = block.x * toFloat squareSize + x
         , y = block.y * toFloat squareSize + y
     }
+
+
+createScreenFrame : List Block
+createScreenFrame =
+    let
+        x =
+            [ String.repeat (gridWidth + 2) "#" ]
+
+        body =
+            "#" ++ String.repeat gridWidth " " ++ "#"
+
+        b =
+            List.repeat gridHeight body
+
+        strings =
+            x ++ b ++ x
+    in
+    createFromStrings "invisible" strings
+        |> List.map (convertCoordinates (toFloat -squareSize) (toFloat -squareSize))

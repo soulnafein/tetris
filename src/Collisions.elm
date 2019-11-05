@@ -1,35 +1,7 @@
-module Collisions exposing
-    ( bottomScreen
-    , horizontally
-    , leftScreen
-    , rightScreen
-    , withBlocks
-    )
+module Collisions exposing (withBlocks)
 
 import Block exposing (Block)
 import Configuration exposing (backgroundHeight, backgroundWidth, squareSize)
-
-
-bottomScreen : List Block -> Bool
-bottomScreen tetrominoBlocks =
-    areCollidingWithHorizontalLine (toFloat backgroundHeight) tetrominoBlocks
-
-
-leftScreen : List Block -> Bool
-leftScreen tetrominoBlocks =
-    areCollidingWithLeftLine 0 tetrominoBlocks
-
-
-rightScreen : List Block -> Bool
-rightScreen tetrominoBlocks =
-    areCollidingWithRightLine (toFloat backgroundWidth) tetrominoBlocks
-
-
-horizontally : List Block -> List Block -> Bool
-horizontally blocks tetrominoBlocks =
-    leftScreen tetrominoBlocks
-        || rightScreen tetrominoBlocks
-        || areCollidingTwoLists tetrominoBlocks blocks
 
 
 withBlocks : List Block -> List Block -> Bool

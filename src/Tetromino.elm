@@ -7,7 +7,7 @@ module Tetromino exposing
     )
 
 import Block exposing (Block)
-import BlockFactory
+import BlockMaker
 import Collisions
 import Configuration
     exposing
@@ -63,13 +63,17 @@ updateX actualX tetromino =
 
 update : Float -> Keyboard -> Tetromino -> List Block -> Int -> Tetromino
 update delta keyboard tetromino blocks score =
+    let
+        blocksAndScreenFrame =
+            blocks ++ BlockMaker.createScreenFrame
+    in
     tetromino
         |> updateFallingSpeed keyboard (toFloat score)
         |> fall delta
-        |> resolveVerticalCollisions blocks
+        |> resolveCollisions blocks [ onVerticalCollision ]
         |> horizontalMovement delta keyboard
-        |> resolveHorizontalCollisions blocks keyboard
-        |> updateRotation keyboard blocks
+        |> resolveCollisions blocks [ onLeftCollision keyboard, onRightCollision keyboard ]
+        |> updateRotation keyboard blocksAndScreenFrame
 
 
 updateFallingSpeed : Keyboard -> Float -> Tetromino -> Tetromino
@@ -108,7 +112,7 @@ updateRotation keyboard blocks tetromino =
             { tetromino | rotation = rotation, hasJustRotated = hasJustRotated }
                 |> updateBlocks
     in
-    if Collisions.horizontally blocks updatedTetromino.blocks then
+    if Collisions.withBlocks updatedTetromino.blocks blocks then
         tetromino
 
     else
@@ -152,60 +156,43 @@ calculateHorizontalSpeed keyboard =
         0
 
 
-resolveVerticalCollisions : List Block -> Tetromino -> Tetromino
-resolveVerticalCollisions blocks tetromino =
-    let
-        tetrominoBlocks =
-            tetromino.blocks
-    in
-    if Collisions.bottomScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
-        tetromino
-            |> updateY (tetromino.y - toFloat squareSize)
-            |> updateVerticalSpeed 0
+resolveCollisions : List Block -> List (Tetromino -> Tetromino) -> Tetromino -> Tetromino
+resolveCollisions blocks funcs tetromino =
+    List.foldl (resolveCollision (blocks ++ BlockMaker.createScreenFrame)) tetromino funcs
+
+
+resolveCollision : List Block -> (Tetromino -> Tetromino) -> Tetromino -> Tetromino
+resolveCollision blocks func tetromino =
+    if Collisions.withBlocks tetromino.blocks blocks then
+        func tetromino
 
     else
         tetromino
 
 
-resolveHorizontalCollisions : List Block -> Keyboard -> Tetromino -> Tetromino
-resolveHorizontalCollisions blocks keyboard tetromino =
-    tetromino
-        |> resolveLeftCollision blocks keyboard
-        |> resolveRightCollision blocks keyboard
+onVerticalCollision : Tetromino -> Tetromino
+onVerticalCollision t =
+    t
+        |> updateY (t.y - toFloat squareSize)
+        |> updateVerticalSpeed 0
 
 
-resolveLeftCollision : List Block -> Keyboard -> Tetromino -> Tetromino
-resolveLeftCollision blocks keyboard tetromino =
-    let
-        tetrominoBlocks =
-            tetromino.blocks
-    in
+onLeftCollision : Keyboard -> Tetromino -> Tetromino
+onLeftCollision keyboard t =
     if keyboard.leftArrowPressed then
-        if Collisions.leftScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
-            updateX (tetromino.actualX + toFloat squareSize) tetromino
-
-        else
-            tetromino
+        updateX (t.actualX + toFloat squareSize) t
 
     else
-        tetromino
+        t
 
 
-resolveRightCollision : List Block -> Keyboard -> Tetromino -> Tetromino
-resolveRightCollision blocks keyboard tetromino =
-    let
-        tetrominoBlocks =
-            tetromino.blocks
-    in
+onRightCollision : Keyboard -> Tetromino -> Tetromino
+onRightCollision keyboard t =
     if keyboard.rightArrowPressed then
-        if Collisions.rightScreen tetrominoBlocks || Collisions.withBlocks tetrominoBlocks blocks then
-            updateX (tetromino.x - toFloat squareSize) tetromino
-
-        else
-            tetromino
+        updateX (t.actualX - toFloat squareSize) t
 
     else
-        tetromino
+        t
 
 
 updateVerticalSpeed : Float -> Tetromino -> Tetromino
@@ -239,7 +226,7 @@ updateBlocks : Tetromino -> Tetromino
 updateBlocks tetromino =
     let
         blocks =
-            BlockFactory.createByType
+            BlockMaker.createByType
                 tetromino.tetrominoType
                 tetromino.rotation
                 tetromino.x
