@@ -90,271 +90,6 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.0/optimize for better performance and smaller assets.');
 
 
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === elm$core$Basics$EQ ? 0 : ord === elm$core$Basics$LT ? -1 : 1;
-	}));
-});
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = elm$core$Set$toList(x);
-		y = elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = elm$core$Dict$toList(x);
-		y = elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = elm$core$Dict$toList(x);
-		y = elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? elm$core$Basics$LT : n ? elm$core$Basics$GT : elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -800,6 +535,271 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = elm$core$Set$toList(x);
+		y = elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = elm$core$Dict$toList(x);
+		y = elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = elm$core$Dict$toList(x);
+		y = elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? elm$core$Basics$LT : n ? elm$core$Basics$GT : elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === elm$core$Basics$EQ ? 0 : ord === elm$core$Basics$LT ? -1 : 1;
+	}));
+});
 
 
 
@@ -4403,16 +4403,74 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Model$TetrominoGenerated = function (a) {
-	return {$: 'TetrominoGenerated', a: a};
+var author$project$Model$InitialSeed = function (a) {
+	return {$: 'InitialSeed', a: a};
 };
 var elm$core$Basics$False = {$: 'False'};
 var elm$core$Maybe$Nothing = {$: 'Nothing'};
 var author$project$Keyboard$init = {bottomArrowPressed: false, keyPressed: elm$core$Maybe$Nothing, leftArrowPressed: false, rightArrowPressed: false, upArrowPressed: false};
-var author$project$Configuration$squareSize = 30;
+var elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
+var elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(x);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(xs);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var elm$core$Basics$EQ = {$: 'EQ'};
-var elm$core$Basics$GT = {$: 'GT'};
 var elm$core$Basics$LT = {$: 'LT'};
+var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var elm$core$Array$foldr = F3(
+	function (func, baseCase, _n0) {
+		var tree = _n0.c;
+		var tail = _n0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3(elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			elm$core$Elm$JsArray$foldr,
+			helper,
+			A3(elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var elm$core$List$cons = _List_cons;
+var elm$core$Array$toList = function (array) {
+	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
+};
+var elm$core$Basics$GT = {$: 'GT'};
 var elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4438,7 +4496,6 @@ var elm$core$Dict$foldr = F3(
 			}
 		}
 	});
-var elm$core$List$cons = _List_cons;
 var elm$core$Dict$toList = function (dict) {
 	return A3(
 		elm$core$Dict$foldr,
@@ -4466,149 +4523,22 @@ var elm$core$Set$toList = function (_n0) {
 	var dict = _n0.a;
 	return elm$core$Dict$keys(dict);
 };
-var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var elm$core$Array$foldr = F3(
-	function (func, baseCase, _n0) {
-		var tree = _n0.c;
-		var tail = _n0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3(elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			elm$core$Elm$JsArray$foldr,
-			helper,
-			A3(elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var elm$core$Array$toList = function (array) {
-	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
+var author$project$Model$pickNextTetromino = function (model) {
+	return _Utils_update(
+		model,
+		{
+			nextTetrominos: A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				elm$core$List$tail(model.nextTetrominos)),
+			tetromino: A2(
+				elm$core$Maybe$withDefault,
+				model.tetromino,
+				elm$core$List$head(model.nextTetrominos))
+		});
 };
-var elm$core$Basics$mul = _Basics_mul;
-var author$project$Configuration$fallingSpeed = author$project$Configuration$squareSize * 3;
-var author$project$Rotation$North = {$: 'North'};
-var author$project$Block$blocksI = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['OOOO', '####']);
-		case 'East':
-			return _List_fromArray(
-				['OO#O', 'OO#O', 'OO#O', 'OO#O']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', 'OOOO', '####']);
-		default:
-			return _List_fromArray(
-				['O#OO', 'O#OO', 'O#OO', 'O#OO']);
-	}
-};
-var author$project$Block$blocksJ = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['#OOO', '###O']);
-		case 'East':
-			return _List_fromArray(
-				['O##O', 'O#OO', 'O#OO']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', '###O', 'OO#O']);
-		default:
-			return _List_fromArray(
-				['O#OO', 'O#OO', '##OO']);
-	}
-};
-var author$project$Block$blocksL = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['OO#O', '###O']);
-		case 'East':
-			return _List_fromArray(
-				['O#OO', 'O#OO', 'O##O']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', '###O', '#OOO']);
-		default:
-			return _List_fromArray(
-				['##OO', 'O#OO', 'O#OO']);
-	}
-};
-var author$project$Block$blocksO = function (rotation) {
-	return _List_fromArray(
-		['0##0', '0##0']);
-};
-var author$project$Block$blocksS = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['O##O', '##OO']);
-		case 'East':
-			return _List_fromArray(
-				['O#OO', 'O##O', 'OO#O']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', 'O##O', '##OO']);
-		default:
-			return _List_fromArray(
-				['#OOO', '##OO', 'O#OO']);
-	}
-};
-var author$project$Block$blocksT = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['O#OO', '###O']);
-		case 'East':
-			return _List_fromArray(
-				['O#OO', 'O##O', 'O#OO']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', '###O', 'O#OO']);
-		default:
-			return _List_fromArray(
-				['O#OO', '##OO', 'O#OO']);
-	}
-};
-var author$project$Block$blocksZ = function (rotation) {
-	switch (rotation.$) {
-		case 'North':
-			return _List_fromArray(
-				['##OO', 'O##O']);
-		case 'East':
-			return _List_fromArray(
-				['OO#O', 'O##O', 'O#OO']);
-		case 'South':
-			return _List_fromArray(
-				['OOOO', '##OO', 'O##O']);
-		default:
-			return _List_fromArray(
-				['O#OO', '##OO', '#OOO']);
-	}
-};
+var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Basics$add = _Basics_add;
-var author$project$Block$convertCoordinates = F3(
-	function (x, y, block) {
-		return _Utils_update(
-			block,
-			{x: (block.x * author$project$Configuration$squareSize) + x, y: (block.y * author$project$Configuration$squareSize) + y});
-	});
-var author$project$Block$create = function (block) {
-	return {color: block.color, x: block.x, y: block.y};
-};
-var elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
-var elm$core$Basics$toFloat = _Basics_toFloat;
-var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$foldl = F3(
 	function (func, acc, list) {
 		foldl:
@@ -4628,6 +4558,134 @@ var elm$core$List$foldl = F3(
 			}
 		}
 	});
+var elm$core$List$length = function (xs) {
+	return A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n0, i) {
+				return i + 1;
+			}),
+		0,
+		xs);
+};
+var author$project$Model$nextTetrominosAlmostEmpty = function (model) {
+	return elm$core$List$length(model.nextTetrominos) < 3;
+};
+var author$project$Configuration$squareSize = 30;
+var elm$core$Basics$mul = _Basics_mul;
+var author$project$Configuration$fallingSpeed = author$project$Configuration$squareSize * 3;
+var author$project$Rotation$North = {$: 'North'};
+var author$project$BlockMaker$blocksI = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['OOOO', '####']);
+		case 'East':
+			return _List_fromArray(
+				['OO#O', 'OO#O', 'OO#O', 'OO#O']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', 'OOOO', '####']);
+		default:
+			return _List_fromArray(
+				['O#OO', 'O#OO', 'O#OO', 'O#OO']);
+	}
+};
+var author$project$BlockMaker$blocksJ = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['#OOO', '###O']);
+		case 'East':
+			return _List_fromArray(
+				['O##O', 'O#OO', 'O#OO']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', '###O', 'OO#O']);
+		default:
+			return _List_fromArray(
+				['O#OO', 'O#OO', '##OO']);
+	}
+};
+var author$project$BlockMaker$blocksL = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['OO#O', '###O']);
+		case 'East':
+			return _List_fromArray(
+				['O#OO', 'O#OO', 'O##O']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', '###O', '#OOO']);
+		default:
+			return _List_fromArray(
+				['##OO', 'O#OO', 'O#OO']);
+	}
+};
+var author$project$BlockMaker$blocksO = function (rotation) {
+	return _List_fromArray(
+		['0##0', '0##0']);
+};
+var author$project$BlockMaker$blocksS = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['O##O', '##OO']);
+		case 'East':
+			return _List_fromArray(
+				['O#OO', 'O##O', 'OO#O']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', 'O##O', '##OO']);
+		default:
+			return _List_fromArray(
+				['#OOO', '##OO', 'O#OO']);
+	}
+};
+var author$project$BlockMaker$blocksT = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['O#OO', '###O']);
+		case 'East':
+			return _List_fromArray(
+				['O#OO', 'O##O', 'O#OO']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', '###O', 'O#OO']);
+		default:
+			return _List_fromArray(
+				['O#OO', '##OO', 'O#OO']);
+	}
+};
+var author$project$BlockMaker$blocksZ = function (rotation) {
+	switch (rotation.$) {
+		case 'North':
+			return _List_fromArray(
+				['##OO', 'O##O']);
+		case 'East':
+			return _List_fromArray(
+				['OO#O', 'O##O', 'O#OO']);
+		case 'South':
+			return _List_fromArray(
+				['OOOO', '##OO', 'O##O']);
+		default:
+			return _List_fromArray(
+				['O#OO', '##OO', '#OOO']);
+	}
+};
+var elm$core$Basics$toFloat = _Basics_toFloat;
+var author$project$BlockMaker$convertCoordinates = F3(
+	function (x, y, block) {
+		return _Utils_update(
+			block,
+			{x: (block.x * author$project$Configuration$squareSize) + x, y: (block.y * author$project$Configuration$squareSize) + y});
+	});
+var author$project$Block$create = function (block) {
+	return {color: block.color, x: block.x, y: block.y};
+};
+var elm$core$Basics$gt = _Utils_gt;
 var elm$core$List$reverse = function (list) {
 	return A3(elm$core$List$foldl, elm$core$List$cons, _List_Nil, list);
 };
@@ -4700,11 +4758,8 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
-var elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
 var elm$core$String$indexes = _String_indexes;
-var author$project$Block$stringToBlocks = F3(
+var author$project$BlockMaker$stringToBlocks = F3(
 	function (color, y, string) {
 		return A2(
 			elm$core$List$map,
@@ -4726,16 +4781,6 @@ var elm$core$List$concat = function (lists) {
 	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
 };
 var elm$core$Basics$sub = _Basics_sub;
-var elm$core$List$length = function (xs) {
-	return A3(
-		elm$core$List$foldl,
-		F2(
-			function (_n0, i) {
-				return i + 1;
-			}),
-		0,
-		xs);
-};
 var elm$core$List$map2 = _List_map2;
 var elm$core$Basics$le = _Utils_le;
 var elm$core$List$rangeHelp = F3(
@@ -4770,12 +4815,12 @@ var elm$core$List$indexedMap = F2(
 				elm$core$List$length(xs) - 1),
 			xs);
 	});
-var author$project$Block$createFromStrings = F2(
+var author$project$BlockMaker$createFromStrings = F2(
 	function (color, rows) {
 		return elm$core$List$concat(
 			A2(
 				elm$core$List$indexedMap,
-				author$project$Block$stringToBlocks(color),
+				author$project$BlockMaker$stringToBlocks(color),
 				rows));
 	});
 var author$project$Palette$blue = 'rgb(58, 52, 235)';
@@ -4785,7 +4830,7 @@ var author$project$Palette$orange = 'rgb(235, 119, 52)';
 var author$project$Palette$purple = 'rgb(201, 125, 255)';
 var author$project$Palette$red = 'rgb(255, 62, 28)';
 var author$project$Palette$yellow = 'rgb(255, 255, 28)';
-var author$project$Block$tetrominoColor = function (tetrominoType) {
+var author$project$BlockMaker$tetrominoColor = function (tetrominoType) {
 	switch (tetrominoType.$) {
 		case 'I':
 			return author$project$Palette$cyan;
@@ -4803,37 +4848,37 @@ var author$project$Block$tetrominoColor = function (tetrominoType) {
 			return author$project$Palette$purple;
 	}
 };
-var author$project$Block$createByType = F4(
+var author$project$BlockMaker$createByType = F4(
 	function (tetrominoType, rotation, x, y) {
-		var color = author$project$Block$tetrominoColor(tetrominoType);
+		var color = author$project$BlockMaker$tetrominoColor(tetrominoType);
 		var blocksFunction = function () {
 			switch (tetrominoType.$) {
 				case 'I':
-					return author$project$Block$blocksI;
+					return author$project$BlockMaker$blocksI;
 				case 'J':
-					return author$project$Block$blocksJ;
+					return author$project$BlockMaker$blocksJ;
 				case 'L':
-					return author$project$Block$blocksL;
+					return author$project$BlockMaker$blocksL;
 				case 'O':
-					return author$project$Block$blocksO;
+					return author$project$BlockMaker$blocksO;
 				case 'S':
-					return author$project$Block$blocksS;
+					return author$project$BlockMaker$blocksS;
 				case 'Z':
-					return author$project$Block$blocksZ;
+					return author$project$BlockMaker$blocksZ;
 				default:
-					return author$project$Block$blocksT;
+					return author$project$BlockMaker$blocksT;
 			}
 		}();
 		return A2(
 			elm$core$List$map,
-			A2(author$project$Block$convertCoordinates, x, y),
+			A2(author$project$BlockMaker$convertCoordinates, x, y),
 			A2(
-				author$project$Block$createFromStrings,
+				author$project$BlockMaker$createFromStrings,
 				color,
 				blocksFunction(rotation)));
 	});
 var author$project$Tetromino$updateBlocks = function (tetromino) {
-	var blocks = A4(author$project$Block$createByType, tetromino.tetrominoType, tetromino.rotation, tetromino.x, tetromino.y);
+	var blocks = A4(author$project$BlockMaker$createByType, tetromino.tetrominoType, tetromino.rotation, tetromino.x, tetromino.y);
 	return _Utils_update(
 		tetromino,
 		{blocks: blocks});
@@ -4843,40 +4888,38 @@ var author$project$Tetromino$init = function (tetrominoType) {
 		{actualX: 0, actualY: 0, blocks: _List_Nil, hasJustRotated: false, rotation: author$project$Rotation$North, tetrominoType: tetrominoType, verticalSpeed: author$project$Configuration$fallingSpeed, x: 0, y: 0});
 };
 var author$project$TetrominoType$I = {$: 'I'};
-var author$project$Model$init = {
-	blocks: _List_Nil,
-	keyboard: author$project$Keyboard$init,
-	score: 0,
-	tetromino: author$project$Tetromino$init(author$project$TetrominoType$I)
-};
 var author$project$TetrominoType$J = {$: 'J'};
 var author$project$TetrominoType$L = {$: 'L'};
 var author$project$TetrominoType$O = {$: 'O'};
 var author$project$TetrominoType$S = {$: 'S'};
 var author$project$TetrominoType$T = {$: 'T'};
 var author$project$TetrominoType$Z = {$: 'Z'};
-var elm$random$Random$addOne = function (value) {
-	return _Utils_Tuple2(1, value);
+var elm$core$List$sortBy = _List_sortBy;
+var elm$core$Tuple$first = function (_n0) {
+	var x = _n0.a;
+	return x;
 };
-var elm$core$Basics$lt = _Utils_lt;
-var elm$core$Basics$negate = function (n) {
-	return -n;
+var elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var elm$core$Tuple$second = function (_n0) {
+	var y = _n0.b;
+	return y;
 };
-var elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var elm$core$List$sum = function (numbers) {
-	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
-};
-var elm$core$Basics$fdiv = _Basics_fdiv;
+var elm$core$Basics$eq = _Utils_equal;
 var elm$core$Basics$identity = function (x) {
 	return x;
 };
+var elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var elm$core$Basics$remainderBy = _Basics_remainderBy;
 var elm$core$Bitwise$and = _Bitwise_and;
+var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var elm$random$Random$Generator = function (a) {
 	return {$: 'Generator', a: a};
 };
-var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var elm$random$Random$Seed = F2(
 	function (a, b) {
 		return {$: 'Seed', a: a, b: b};
@@ -4892,49 +4935,67 @@ var elm$random$Random$peel = function (_n0) {
 	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
 	return ((word >>> 22) ^ word) >>> 0;
 };
-var elm$random$Random$float = F2(
+var elm$random$Random$int = F2(
 	function (a, b) {
 		return elm$random$Random$Generator(
 			function (seed0) {
-				var seed1 = elm$random$Random$next(seed0);
-				var range = elm$core$Basics$abs(b - a);
-				var n1 = elm$random$Random$peel(seed1);
-				var n0 = elm$random$Random$peel(seed0);
-				var lo = (134217727 & n1) * 1.0;
-				var hi = (67108863 & n0) * 1.0;
-				var val = ((hi * 1.34217728e8) + lo) / 9.007199254740992e15;
-				var scaled = (val * range) + a;
-				return _Utils_Tuple2(
-					scaled,
-					elm$random$Random$next(seed1));
+				var _n0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _n0.a;
+				var hi = _n0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & elm$random$Random$peel(seed0)) >>> 0) + lo,
+						elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = elm$random$Random$peel(seed);
+							var seedN = elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
 			});
 	});
-var elm$random$Random$getByWeight = F3(
-	function (_n0, others, countdown) {
-		getByWeight:
+var elm$random$Random$listHelp = F4(
+	function (revList, n, gen, seed) {
+		listHelp:
 		while (true) {
-			var weight = _n0.a;
-			var value = _n0.b;
-			if (!others.b) {
-				return value;
+			if (n < 1) {
+				return _Utils_Tuple2(revList, seed);
 			} else {
-				var second = others.a;
-				var otherOthers = others.b;
-				if (_Utils_cmp(
-					countdown,
-					elm$core$Basics$abs(weight)) < 1) {
-					return value;
-				} else {
-					var $temp$_n0 = second,
-						$temp$others = otherOthers,
-						$temp$countdown = countdown - elm$core$Basics$abs(weight);
-					_n0 = $temp$_n0;
-					others = $temp$others;
-					countdown = $temp$countdown;
-					continue getByWeight;
-				}
+				var _n0 = gen(seed);
+				var value = _n0.a;
+				var newSeed = _n0.b;
+				var $temp$revList = A2(elm$core$List$cons, value, revList),
+					$temp$n = n - 1,
+					$temp$gen = gen,
+					$temp$seed = newSeed;
+				revList = $temp$revList;
+				n = $temp$n;
+				gen = $temp$gen;
+				seed = $temp$seed;
+				continue listHelp;
 			}
 		}
+	});
+var elm$random$Random$list = F2(
+	function (n, _n0) {
+		var gen = _n0.a;
+		return elm$random$Random$Generator(
+			function (seed) {
+				return A4(elm$random$Random$listHelp, _List_Nil, n, gen, seed);
+			});
 	});
 var elm$random$Random$map = F2(
 	function (func, _n0) {
@@ -4949,31 +5010,65 @@ var elm$random$Random$map = F2(
 					seed1);
 			});
 	});
-var elm$random$Random$weighted = F2(
-	function (first, others) {
-		var normalize = function (_n0) {
-			var weight = _n0.a;
-			return elm$core$Basics$abs(weight);
-		};
-		var total = normalize(first) + elm$core$List$sum(
-			A2(elm$core$List$map, normalize, others));
+var author$project$Tetromino$tetrominoSequence = A2(
+	elm$random$Random$map,
+	function (list) {
 		return A2(
-			elm$random$Random$map,
-			A2(elm$random$Random$getByWeight, first, others),
-			A2(elm$random$Random$float, 0, total));
+			elm$core$List$map,
+			author$project$Tetromino$init,
+			A2(
+				elm$core$List$map,
+				elm$core$Tuple$second,
+				A2(
+					elm$core$List$sortBy,
+					elm$core$Tuple$first,
+					A3(
+						elm$core$List$map2,
+						elm$core$Tuple$pair,
+						list,
+						_List_fromArray(
+							[author$project$TetrominoType$I, author$project$TetrominoType$J, author$project$TetrominoType$O, author$project$TetrominoType$L, author$project$TetrominoType$S, author$project$TetrominoType$Z, author$project$TetrominoType$T])))));
+	},
+	A2(
+		elm$random$Random$list,
+		7,
+		A2(elm$random$Random$int, 0, 1000)));
+var elm$random$Random$step = F2(
+	function (_n0, seed) {
+		var generator = _n0.a;
+		return generator(seed);
 	});
-var elm$random$Random$uniform = F2(
-	function (value, valueList) {
-		return A2(
-			elm$random$Random$weighted,
-			elm$random$Random$addOne(value),
-			A2(elm$core$List$map, elm$random$Random$addOne, valueList));
-	});
-var author$project$Tetromino$randomTetrominoGenerator = A2(
-	elm$random$Random$uniform,
-	author$project$TetrominoType$I,
-	_List_fromArray(
-		[author$project$TetrominoType$J, author$project$TetrominoType$L, author$project$TetrominoType$O, author$project$TetrominoType$S, author$project$TetrominoType$Z, author$project$TetrominoType$T]));
+var author$project$Tetromino$generateNextBag = function (seed) {
+	return A2(elm$random$Random$step, author$project$Tetromino$tetrominoSequence, seed);
+};
+var elm$core$Basics$append = _Utils_append;
+var author$project$Model$updateNextTetrominos = function (model) {
+	if (author$project$Model$nextTetrominosAlmostEmpty(model)) {
+		var _n0 = author$project$Tetromino$generateNextBag(model.seed);
+		var nextTetrominos = _n0.a;
+		var newSeed = _n0.b;
+		return _Utils_update(
+			model,
+			{
+				nextTetrominos: _Utils_ap(model.nextTetrominos, nextTetrominos),
+				seed: newSeed
+			});
+	} else {
+		return model;
+	}
+};
+var author$project$Model$init = function (seed) {
+	return author$project$Model$pickNextTetromino(
+		author$project$Model$updateNextTetrominos(
+			{
+				blocks: _List_Nil,
+				keyboard: author$project$Keyboard$init,
+				nextTetrominos: _List_Nil,
+				score: 0,
+				seed: seed,
+				tetromino: author$project$Tetromino$init(author$project$TetrominoType$I)
+			}));
+};
 var elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5030,6 +5125,7 @@ var elm$core$Array$Array_elm_builtin = F4(
 		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
 	});
 var elm$core$Basics$ceiling = _Basics_ceiling;
+var elm$core$Basics$fdiv = _Basics_fdiv;
 var elm$core$Basics$logBase = F2(
 	function (base, number) {
 		return _Basics_log(number) / _Basics_log(base);
@@ -5067,11 +5163,6 @@ var elm$core$Array$compressNodes = F2(
 			}
 		}
 	});
-var elm$core$Basics$eq = _Utils_equal;
-var elm$core$Tuple$first = function (_n0) {
-	var x = _n0.a;
-	return x;
-};
 var elm$core$Array$treeFromBuilder = F2(
 	function (nodeList, nodeListSize) {
 		treeFromBuilder:
@@ -5149,7 +5240,6 @@ var elm$core$Array$initializeHelp = F5(
 			}
 		}
 	});
-var elm$core$Basics$remainderBy = _Basics_remainderBy;
 var elm$core$Array$initialize = F2(
 	function (len, fn) {
 		if (len <= 0) {
@@ -5183,7 +5273,6 @@ var elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
 var elm$core$Basics$and = _Basics_and;
-var elm$core$Basics$append = _Utils_append;
 var elm$core$Basics$or = _Basics_or;
 var elm$core$Char$toCode = _Char_toCode;
 var elm$core$Char$isLower = function (_char) {
@@ -5330,11 +5419,6 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 		}
 	});
 var elm$core$Platform$sendToApp = _Platform_sendToApp;
-var elm$random$Random$step = F2(
-	function (_n0, seed) {
-		var generator = _n0.a;
-		return generator(seed);
-	});
 var elm$random$Random$onEffects = F3(
 	function (router, commands, seed) {
 		if (!commands.b) {
@@ -5371,12 +5455,13 @@ var elm$random$Random$generate = F2(
 			elm$random$Random$Generate(
 				A2(elm$random$Random$map, tagger, generator)));
 	});
-var author$project$Tetromino$generateRandomType = function (msg) {
-	return A2(elm$random$Random$generate, msg, author$project$Tetromino$randomTetrominoGenerator);
-};
 var author$project$Main$init = _Utils_Tuple2(
-	author$project$Model$init,
-	author$project$Tetromino$generateRandomType(author$project$Model$TetrominoGenerated));
+	author$project$Model$init(
+		elm$random$Random$initialSeed(0)),
+	A2(
+		elm$random$Random$generate,
+		author$project$Model$InitialSeed,
+		A2(elm$random$Random$int, 0, 9999999)));
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$string = _Json_decodeString;
 var author$project$Main$keyDecoder = A2(elm$json$Json$Decode$field, 'key', elm$json$Json$Decode$string);
@@ -6157,7 +6242,7 @@ var elm$browser$Browser$Events$on = F3(
 var elm$browser$Browser$Events$onKeyDown = A2(elm$browser$Browser$Events$on, elm$browser$Browser$Events$Document, 'keydown');
 var elm$browser$Browser$Events$onKeyUp = A2(elm$browser$Browser$Events$on, elm$browser$Browser$Events$Document, 'keyup');
 var elm$core$Platform$Sub$batch = _Platform_batch;
-var author$project$Main$subscriptions = function (model) {
+var author$project$Main$subscriptions = function (_n0) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
@@ -6171,6 +6256,19 @@ var author$project$Main$subscriptions = function (model) {
 var author$project$Keyboard$Pressed = {$: 'Pressed'};
 var author$project$Keyboard$Released = {$: 'Released'};
 var author$project$Model$simulationStep = 2.0e-2;
+var author$project$Tetromino$stoppedMoving = function (tetromino) {
+	return !tetromino.verticalSpeed;
+};
+var author$project$Model$addTetrominoToBlocks = function (model) {
+	var tetrominoStoppedMoving = author$project$Tetromino$stoppedMoving(model.tetromino);
+	var tetrominoOutsideGrid = model.tetromino.y < 0;
+	return tetrominoStoppedMoving ? (tetrominoOutsideGrid ? author$project$Model$init(model.seed) : author$project$Model$pickNextTetromino(
+		_Utils_update(
+			model,
+			{
+				blocks: _Utils_ap(model.blocks, model.tetromino.blocks)
+			}))) : model;
+};
 var author$project$Configuration$gridWidth = 10;
 var elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -6194,15 +6292,6 @@ var author$project$Block$lineFull = F2(
 				blocks));
 		return _Utils_eq(numberOfBlocksInLine, author$project$Configuration$gridWidth);
 	});
-var elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(x);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
 var author$project$Block$nextLineToDelete = function (blocks) {
 	var lines = A2(
 		elm$core$List$map,
@@ -6257,9 +6346,65 @@ var author$project$Block$update = function (_n0) {
 		}
 	}
 };
-var author$project$Tetromino$stoppedMoving = function (tetromino) {
-	return !tetromino.verticalSpeed;
+var author$project$Model$checkRowCompletion = function (model) {
+	var _n0 = author$project$Block$update(
+		_Utils_Tuple2(model.blocks, 0));
+	var blocks = _n0.a;
+	var points = _n0.b;
+	return _Utils_update(
+		model,
+		{blocks: blocks, score: model.score + points});
 };
+var author$project$Configuration$gridHeight = 20;
+var elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2(elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3(elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3(elm$core$String$repeatHelp, n, chunk, '');
+	});
+var author$project$BlockMaker$createScreenFrame = function () {
+	var x = _List_fromArray(
+		[
+			A2(elm$core$String$repeat, author$project$Configuration$gridWidth + 2, '#')
+		]);
+	var body = '#' + (A2(elm$core$String$repeat, author$project$Configuration$gridWidth, ' ') + '#');
+	var b = A2(elm$core$List$repeat, author$project$Configuration$gridHeight, body);
+	var strings = _Utils_ap(
+		x,
+		_Utils_ap(b, x));
+	return A2(
+		elm$core$List$map,
+		A2(author$project$BlockMaker$convertCoordinates, -author$project$Configuration$squareSize, -author$project$Configuration$squareSize),
+		A2(author$project$BlockMaker$createFromStrings, 'invisible', strings));
+}();
 var author$project$Tetromino$stickToGrid = function (aNumber) {
 	return elm$core$Basics$floor(aNumber / author$project$Configuration$squareSize) * author$project$Configuration$squareSize;
 };
@@ -6298,7 +6443,27 @@ var author$project$Tetromino$horizontalMovement = F3(
 		return author$project$Tetromino$updateBlocks(
 			A2(author$project$Tetromino$updateX, updatedActualX, tetromino));
 	});
-var author$project$Block$areColliding = F2(
+var author$project$Tetromino$onLeftCollision = F2(
+	function (keyboard, t) {
+		return keyboard.leftArrowPressed ? A2(author$project$Tetromino$updateX, t.actualX + author$project$Configuration$squareSize, t) : t;
+	});
+var author$project$Tetromino$onRightCollision = F2(
+	function (keyboard, t) {
+		return keyboard.rightArrowPressed ? A2(author$project$Tetromino$updateX, t.actualX - author$project$Configuration$squareSize, t) : t;
+	});
+var author$project$Tetromino$updateVerticalSpeed = F2(
+	function (speed, tetromino) {
+		return _Utils_update(
+			tetromino,
+			{verticalSpeed: speed});
+	});
+var author$project$Tetromino$onVerticalCollision = function (t) {
+	return A2(
+		author$project$Tetromino$updateVerticalSpeed,
+		0,
+		A2(author$project$Tetromino$updateY, t.y - author$project$Configuration$squareSize, t));
+};
+var author$project$Collisions$areColliding = F2(
 	function (a, b) {
 		return _Utils_eq(a.x, b.x) && _Utils_eq(a.y, b.y);
 	});
@@ -6323,92 +6488,42 @@ var elm$core$List$any = F2(
 			}
 		}
 	});
-var author$project$Block$areCollidingOneBlockAndList = F2(
+var author$project$Collisions$areCollidingOneBlockAndList = F2(
 	function (blocks, a) {
 		return A2(
 			elm$core$List$any,
-			author$project$Block$areColliding(a),
+			author$project$Collisions$areColliding(a),
 			blocks);
 	});
-var author$project$Block$areCollidingTwoLists = F2(
+var author$project$Collisions$areCollidingTwoLists = F2(
 	function (blocksA, blocksB) {
 		return A2(
 			elm$core$List$any,
-			author$project$Block$areCollidingOneBlockAndList(blocksB),
+			author$project$Collisions$areCollidingOneBlockAndList(blocksB),
 			blocksA);
 	});
-var author$project$Block$areCollidingWithLeftLine = F2(
-	function (x, blocks) {
-		return A2(
-			elm$core$List$any,
-			function (b) {
-				return _Utils_cmp(b.x, x) < 0;
-			},
-			blocks);
+var author$project$Collisions$withBlocks = F2(
+	function (tetrominoBlocks, blocks) {
+		return A2(author$project$Collisions$areCollidingTwoLists, tetrominoBlocks, blocks);
 	});
-var author$project$Collisions$leftScreen = function (tetromino) {
-	return A2(author$project$Block$areCollidingWithLeftLine, 0, tetromino.blocks);
-};
-var author$project$Tetromino$resolveLeftCollision = F3(
-	function (blocks, keyboard, tetromino) {
-		return keyboard.leftArrowPressed ? ((author$project$Collisions$leftScreen(tetromino) || A2(author$project$Block$areCollidingTwoLists, tetromino.blocks, blocks)) ? A2(author$project$Tetromino$updateX, tetromino.actualX + author$project$Configuration$squareSize, tetromino) : tetromino) : tetromino;
+var author$project$Tetromino$resolveCollision = F3(
+	function (blocks, func, tetromino) {
+		return A2(author$project$Collisions$withBlocks, tetromino.blocks, blocks) ? func(tetromino) : tetromino;
 	});
-var author$project$Block$areCollidingWithRightLine = F2(
-	function (x, blocks) {
-		return A2(
-			elm$core$List$any,
-			function (b) {
-				return _Utils_cmp(b.x + author$project$Configuration$squareSize, x) > 0;
-			},
-			blocks);
-	});
-var author$project$Configuration$backgroundWidth = author$project$Configuration$squareSize * author$project$Configuration$gridWidth;
-var author$project$Collisions$rightScreen = function (tetromino) {
-	return A2(author$project$Block$areCollidingWithRightLine, author$project$Configuration$backgroundWidth, tetromino.blocks);
-};
-var author$project$Tetromino$resolveRightCollision = F3(
-	function (blocks, keyboard, tetromino) {
-		return keyboard.rightArrowPressed ? ((author$project$Collisions$rightScreen(tetromino) || A2(author$project$Block$areCollidingTwoLists, tetromino.blocks, blocks)) ? A2(author$project$Tetromino$updateX, tetromino.x - author$project$Configuration$squareSize, tetromino) : tetromino) : tetromino;
-	});
-var author$project$Tetromino$resolveHorizontalCollisions = F3(
-	function (blocks, keyboard, tetromino) {
+var author$project$Tetromino$resolveCollisions = F3(
+	function (blocks, funcs, tetromino) {
 		return A3(
-			author$project$Tetromino$resolveRightCollision,
-			blocks,
-			keyboard,
-			A3(author$project$Tetromino$resolveLeftCollision, blocks, keyboard, tetromino));
-	});
-var author$project$Block$areCollidingWithHorizontalLine = F2(
-	function (y, blocks) {
-		return A2(
-			elm$core$List$any,
-			function (b) {
-				return _Utils_cmp(b.y + author$project$Configuration$squareSize, y) > 0;
-			},
-			blocks);
-	});
-var author$project$Configuration$gridHeight = 20;
-var author$project$Configuration$backgroundHeight = author$project$Configuration$squareSize * author$project$Configuration$gridHeight;
-var author$project$Collisions$bottomScreen = function (tetromino) {
-	return A2(author$project$Block$areCollidingWithHorizontalLine, author$project$Configuration$backgroundHeight, tetromino.blocks);
-};
-var author$project$Tetromino$updateVerticalSpeed = F2(
-	function (speed, tetromino) {
-		return _Utils_update(
+			elm$core$List$foldl,
+			author$project$Tetromino$resolveCollision(
+				_Utils_ap(blocks, author$project$BlockMaker$createScreenFrame)),
 			tetromino,
-			{verticalSpeed: speed});
-	});
-var author$project$Tetromino$resolveVerticalCollisions = F2(
-	function (blocks, tetromino) {
-		return (author$project$Collisions$bottomScreen(tetromino) || A2(author$project$Block$areCollidingTwoLists, tetromino.blocks, blocks)) ? A2(
-			author$project$Tetromino$updateVerticalSpeed,
-			0,
-			A2(author$project$Tetromino$updateY, tetromino.y - author$project$Configuration$squareSize, tetromino)) : tetromino;
+			funcs);
 	});
 var author$project$Tetromino$updateFallingSpeed = F3(
 	function (keyboard, score, tetromino) {
-		var modifiedSpeed = author$project$Configuration$fallingSpeed * (1 + (score / 700));
-		var speed = keyboard.bottomArrowPressed ? (modifiedSpeed + (5 * author$project$Configuration$fallingSpeed)) : modifiedSpeed;
+		var floatFallingSpeed = author$project$Configuration$fallingSpeed;
+		var modifiedSpeed = floatFallingSpeed * (1 + (score / 700));
+		var speed = keyboard.bottomArrowPressed ? (modifiedSpeed + (5 * floatFallingSpeed)) : modifiedSpeed;
 		return A2(author$project$Tetromino$updateVerticalSpeed, speed, tetromino);
 	});
 var author$project$Rotation$East = {$: 'East'};
@@ -6426,10 +6541,6 @@ var author$project$Rotation$next = function (rotation) {
 			return author$project$Rotation$North;
 	}
 };
-var author$project$Tetromino$collidingHorizontally = F2(
-	function (blocks, tetromino) {
-		return author$project$Collisions$leftScreen(tetromino) || (author$project$Collisions$rightScreen(tetromino) || A2(author$project$Block$areCollidingTwoLists, tetromino.blocks, blocks));
-	});
 var elm$core$Basics$not = _Basics_not;
 var author$project$Tetromino$updateRotation = F3(
 	function (keyboard, blocks, tetromino) {
@@ -6439,41 +6550,53 @@ var author$project$Tetromino$updateRotation = F3(
 			_Utils_update(
 				tetromino,
 				{hasJustRotated: hasJustRotated, rotation: rotation}));
-		return A2(author$project$Tetromino$collidingHorizontally, blocks, updatedTetromino) ? tetromino : updatedTetromino;
+		return A2(author$project$Collisions$withBlocks, updatedTetromino.blocks, blocks) ? tetromino : updatedTetromino;
 	});
 var author$project$Tetromino$update = F5(
 	function (delta, keyboard, tetromino, blocks, score) {
+		var blocksAndScreenFrame = _Utils_ap(blocks, author$project$BlockMaker$createScreenFrame);
 		return A3(
 			author$project$Tetromino$updateRotation,
 			keyboard,
-			blocks,
+			blocksAndScreenFrame,
 			A3(
-				author$project$Tetromino$resolveHorizontalCollisions,
+				author$project$Tetromino$resolveCollisions,
 				blocks,
-				keyboard,
+				_List_fromArray(
+					[
+						author$project$Tetromino$onLeftCollision(keyboard),
+						author$project$Tetromino$onRightCollision(keyboard)
+					]),
 				A3(
 					author$project$Tetromino$horizontalMovement,
 					delta,
 					keyboard,
-					A2(
-						author$project$Tetromino$resolveVerticalCollisions,
+					A3(
+						author$project$Tetromino$resolveCollisions,
 						blocks,
+						_List_fromArray(
+							[author$project$Tetromino$onVerticalCollision]),
 						A2(
 							author$project$Tetromino$fall,
 							delta,
 							A3(author$project$Tetromino$updateFallingSpeed, keyboard, score, tetromino))))));
 	});
-var author$project$Model$updateOneStep = F2(
+var author$project$Model$updateTetromino = F2(
 	function (delta, model) {
-		var tetromino = A5(author$project$Tetromino$update, delta, model.keyboard, model.tetromino, model.blocks, model.score);
-		var blocks = author$project$Tetromino$stoppedMoving(tetromino) ? _Utils_ap(model.blocks, tetromino.blocks) : model.blocks;
-		var _n0 = author$project$Block$update(
-			_Utils_Tuple2(blocks, 0));
-		var updatedBlocks = _n0.a;
-		var points = _n0.b;
 		return _Utils_update(
 			model,
-			{blocks: updatedBlocks, score: model.score + points, tetromino: tetromino});
+			{
+				tetromino: A5(author$project$Tetromino$update, delta, model.keyboard, model.tetromino, model.blocks, model.score)
+			});
+	});
+var author$project$Model$updateOneStep = F2(
+	function (delta, model) {
+		return author$project$Model$checkRowCompletion(
+			author$project$Model$addTetrominoToBlocks(
+				A2(
+					author$project$Model$updateTetromino,
+					delta,
+					author$project$Model$updateNextTetrominos(model))));
 	});
 var author$project$Model$update = F2(
 	function (delta, model) {
@@ -6495,18 +6618,12 @@ var author$project$Model$update = F2(
 		}
 	});
 var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Updates$onFrameUpdate = F2(
 	function (model, delta) {
-		var updatedModel = A2(author$project$Model$update, delta, model);
-		var commands = author$project$Tetromino$stoppedMoving(updatedModel.tetromino) ? _List_fromArray(
-			[
-				author$project$Tetromino$generateRandomType(author$project$Model$TetrominoGenerated)
-			]) : _List_Nil;
-		return (updatedModel.tetromino.y < 0) ? _Utils_Tuple2(
-			author$project$Model$init,
-			author$project$Tetromino$generateRandomType(author$project$Model$TetrominoGenerated)) : _Utils_Tuple2(
-			updatedModel,
-			elm$core$Platform$Cmd$batch(commands));
+		return _Utils_Tuple2(
+			A2(author$project$Model$update, delta, model),
+			elm$core$Platform$Cmd$none);
 	});
 var author$project$Keyboard$updateArrowState = F3(
 	function (code, isPressed, keyboard) {
@@ -6553,7 +6670,6 @@ var author$project$Keyboard$update = F3(
 			isPressed,
 			A3(author$project$Keyboard$updateKeyPressed, code, isPressed, keyboard));
 	});
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Updates$onKeyChange = F3(
 	function (model, code, action) {
 		return _Utils_Tuple2(
@@ -6561,16 +6677,6 @@ var author$project$Updates$onKeyChange = F3(
 				model,
 				{
 					keyboard: A3(author$project$Keyboard$update, code, model.keyboard, action)
-				}),
-			elm$core$Platform$Cmd$none);
-	});
-var author$project$Updates$onTetrominoGenerated = F2(
-	function (model, tetrominoType) {
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{
-					tetromino: author$project$Tetromino$init(tetrominoType)
 				}),
 			elm$core$Platform$Cmd$none);
 	});
@@ -6586,13 +6692,18 @@ var author$project$Main$update = F2(
 			case 'FrameUpdate':
 				var deltaMs = msg.a;
 				return A2(author$project$Updates$onFrameUpdate, model, deltaMs / 1000);
-			case 'TetrominoGenerated':
-				var tetrominoType = msg.a;
-				return A2(author$project$Updates$onTetrominoGenerated, model, tetrominoType);
+			case 'InitialSeed':
+				var initialSeed = msg.a;
+				return _Utils_Tuple2(
+					author$project$Model$init(
+						elm$random$Random$initialSeed(initialSeed)),
+					elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 		}
 	});
+var author$project$Configuration$backgroundHeight = author$project$Configuration$squareSize * author$project$Configuration$gridHeight;
+var author$project$Configuration$backgroundWidth = author$project$Configuration$squareSize * author$project$Configuration$gridWidth;
 var author$project$Palette$grey = 'rgb(236, 240, 241)';
 var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var elm$svg$Svg$rect = elm$svg$Svg$trustedNode('rect');
@@ -6638,10 +6749,29 @@ var author$project$View$renderBlock = function (block) {
 var author$project$View$renderBlocks = function (blocks) {
 	return A2(elm$core$List$map, author$project$View$renderBlock, blocks);
 };
+var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
+var author$project$View$renderNextTetrominos = function (tetrominos) {
+	var tetromino = elm$core$List$head(tetrominos);
+	var result = function () {
+		if (tetromino.$ === 'Just') {
+			var t = tetromino.a;
+			return author$project$View$renderBlocks(t.blocks);
+		} else {
+			return _List_Nil;
+		}
+	}();
+	return A2(
+		elm$svg$Svg$svg,
+		_List_fromArray(
+			[
+				elm$svg$Svg$Attributes$width('120'),
+				elm$svg$Svg$Attributes$height('600')
+			]),
+		result);
+};
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
 var author$project$View$render = function (model) {
 	var tetromino = model.tetromino;
 	return A2(
@@ -6664,7 +6794,8 @@ var author$project$View$render = function (model) {
 					author$project$View$renderBlocks(
 						_Utils_ap(model.blocks, tetromino.blocks)))),
 				elm$html$Html$text(
-				'Score: ' + elm$core$String$fromInt(model.score))
+				'Score: ' + elm$core$String$fromInt(model.score)),
+				author$project$View$renderNextTetrominos(model.nextTetrominos)
 			]));
 };
 var elm$browser$Browser$element = _Browser_element;
