@@ -7,7 +7,7 @@ import Model exposing (Model, Msg)
 import Palette exposing (grey)
 import Svg exposing (Svg, rect, svg)
 import Svg.Attributes as A
-import Tetromino
+import Tetromino exposing (Tetromino)
 
 
 render : Model -> Html Msg
@@ -25,6 +25,7 @@ render model =
                 ++ renderBlocks (model.blocks ++ tetromino.blocks)
             )
         , Html.text ("Score: " ++ String.fromInt model.score)
+        , renderNextTetrominos model.nextTetrominos
         ]
 
 
@@ -52,3 +53,20 @@ renderBlock block =
             String.fromInt (round block.y)
     in
     rect [ A.width size, A.height size, A.fill block.color, A.x roundedX, A.y roundedY, A.stroke "black", A.strokeOpacity "0.2" ] []
+
+
+renderNextTetrominos : List Tetromino -> Svg a
+renderNextTetrominos tetrominos =
+    let
+        tetromino =
+            List.head tetrominos
+
+        result =
+            case tetromino of
+                Just t ->
+                    renderBlocks t.blocks
+
+                _ ->
+                    []
+    in
+    svg [ A.width "120", A.height "600" ] result
