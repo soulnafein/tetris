@@ -1,6 +1,6 @@
 module Tetromino exposing
     ( Tetromino
-    , generateRandomType
+    , generateNextBag
     , init
     , stoppedMoving
     , update
@@ -218,13 +218,21 @@ stoppedMoving tetromino =
     tetromino.verticalSpeed == 0
 
 
-generateRandomType msg =
-    Random.generate msg randomTetrominoGenerator
+generateNextBag : Random.Seed -> ( List Tetromino, Random.Seed )
+generateNextBag seed =
+    Random.step tetrominoSequence seed
 
 
-randomTetrominoGenerator : Random.Generator TetrominoType
-randomTetrominoGenerator =
-    Random.uniform I [ J, L, O, S, Z, T ]
+tetrominoSequence : Random.Generator (List Tetromino)
+tetrominoSequence =
+    Random.list 7 (Random.int 0 1000)
+        |> Random.map
+            (\list ->
+                List.map2 Tuple.pair list [ I, J, O, L, S, Z, T ]
+                    |> List.sortBy Tuple.first
+                    |> List.map Tuple.second
+                    |> List.map init
+            )
 
 
 updateBlocks : Tetromino -> Tetromino

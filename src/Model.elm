@@ -2,6 +2,7 @@ module Model exposing (Model, Msg(..), init, update)
 
 import Block exposing (Block)
 import Keyboard exposing (Keyboard)
+import Random
 import Tetromino exposing (Tetromino)
 import TetrominoType exposing (TetrominoType)
 
@@ -11,7 +12,7 @@ type alias Model =
     , blocks : List Block
     , keyboard : Keyboard
     , score : Int
-    , seed : Int
+    , seed : Random.Seed
     , nextTetrominos : List Tetromino
     }
 
@@ -21,19 +22,20 @@ type Msg
     | FrameUpdate Float
     | KeyUp String
     | KeyDown String
-    | TetrominoGenerated TetrominoType
     | InitialSeed Int
 
 
-init : Model
-init =
+init : Random.Seed -> Model
+init seed =
     { tetromino = Tetromino.init TetrominoType.I
     , blocks = []
     , keyboard = Keyboard.init
     , score = 0
-    , seed = 0
+    , seed = seed
     , nextTetrominos = []
     }
+        |> updateNextTetrominos
+        |> pickNextTetromino
 
 
 update : Float -> Model -> Model
@@ -51,6 +53,7 @@ update delta model =
 updateOneStep : Float -> Model -> Model
 updateOneStep delta model =
     model
+        |> updateNextTetrominos
         |> updateTetromino delta
         |> addTetrominoToBlocks
         |> checkRowCompletion
@@ -65,13 +68,31 @@ updateTetromino delta model =
 
 addTetrominoToBlocks : Model -> Model
 addTetrominoToBlocks model =
-    if Tetromino.stoppedMoving model.tetromino then
-        { model
-            | blocks = model.blocks ++ model.tetromino.blocks
-        }
+    let
+        tetrominoStoppedMoving =
+            Tetromino.stoppedMoving model.tetromino
+
+        tetrominoOutsideGrid =
+            model.tetromino.y < 0
+    in
+    if tetrominoStoppedMoving then
+        if tetrominoOutsideGrid then
+            init model.seed
+
+        else
+            { model | blocks = model.blocks ++ model.tetromino.blocks }
+                |> pickNextTetromino
 
     else
         model
+
+
+pickNextTetromino : Model -> Model
+pickNextTetromino model =
+    { model
+        | tetromino = List.head model.nextTetrominos |> Maybe.withDefault model.tetromino
+        , nextTetrominos = List.tail model.nextTetrominos |> Maybe.withDefault []
+    }
 
 
 checkRowCompletion : Model -> Model
@@ -84,6 +105,28 @@ checkRowCompletion model =
         | blocks = blocks
         , score = model.score + points
     }
+
+
+updateNextTetrominos : Model -> Model
+updateNextTetrominos model =
+    if nextTetrominosAlmostEmpty model then
+        let
+            ( nextTetrominos, newSeed ) =
+                Tetromino.generateNextBag model.seed
+        in
+        { model
+            | nextTetrominos =
+                model.nextTetrominos ++ nextTetrominos
+            , seed = newSeed
+        }
+
+    else
+        model
+
+
+nextTetrominosAlmostEmpty : Model -> Bool
+nextTetrominosAlmostEmpty model =
+    List.length model.nextTetrominos < 3
 
 
 simulationStep : Float

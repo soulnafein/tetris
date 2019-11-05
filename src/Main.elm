@@ -33,11 +33,8 @@ update msg model =
         FrameUpdate deltaMs ->
             Updates.onFrameUpdate model (deltaMs / 1000)
 
-        TetrominoGenerated tetrominoType ->
-            Updates.onTetrominoGenerated model tetrominoType
-
         InitialSeed initialSeed ->
-            ( { model | seed = initialSeed }, Cmd.none )
+            ( Model.init (Random.initialSeed initialSeed), Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -45,11 +42,8 @@ update msg model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model.init
-    , Cmd.batch
-        [ Tetromino.generateRandomType TetrominoGenerated
-        , Random.generate InitialSeed (Random.int 0 9999999)
-        ]
+    ( Model.init (Random.initialSeed 0)
+    , Random.generate InitialSeed (Random.int 0 9999999)
     )
 
 

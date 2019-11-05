@@ -23,21 +23,4 @@ onTetrominoGenerated model tetrominoType =
 
 onFrameUpdate : Model -> Float -> ( Model, Cmd Msg )
 onFrameUpdate model delta =
-    let
-        updatedModel =
-            Model.update delta model
-
-        commands =
-            if Tetromino.stoppedMoving updatedModel.tetromino then
-                [ Tetromino.generateRandomType TetrominoGenerated ]
-
-            else
-                []
-    in
-    if updatedModel.tetromino.y < 0 then
-        ( Model.init
-        , Tetromino.generateRandomType TetrominoGenerated
-        )
-
-    else
-        ( updatedModel, Cmd.batch commands )
+    ( Model.update delta model, Cmd.none )
